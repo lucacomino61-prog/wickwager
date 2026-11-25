@@ -1,0 +1,45 @@
+/* Wickwager room: far, middle and near layers, warm light and motes behind every screen (src/ui/05-room.js).
+   Ported from mockups/ember-lit/lit.css. The ambient loops keep their own pace (they are the room, not the
+   game), so they are not divided by the game speed; reduced motion and test mode hold them still. */
+
+.scene { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none;
+  background: linear-gradient(180deg, var(--b0) 0%, var(--b1) 16%, var(--b2) 31%, var(--b3) 45%, var(--b4) 60%, var(--b5) 76%, var(--b6) 100%); }
+.layer { position: absolute; inset: calc(-12 * var(--px)); transition: transform var(--t-follow) var(--spring-soft); will-change: transform; }
+.layer .drift { position: absolute; inset: 0; }
+.layer canvas { position: absolute; left: 0; top: 0; display: block; }
+.layer.far .drift { animation: drift-far 46s ease-in-out infinite alternate; }
+.layer.mid .drift { animation: drift-mid 31s ease-in-out infinite alternate; }
+.layer.mid canvas { image-rendering: pixelated; opacity: .9; }
+@keyframes drift-far { from { transform: translate3d(calc(-4 * var(--px)), 0, 0); } to { transform: translate3d(calc(4 * var(--px)), calc(-2 * var(--px)), 0); } }
+@keyframes drift-mid { from { transform: translate3d(calc(6 * var(--px)), 0, 0); } to { transform: translate3d(calc(-6 * var(--px)), calc(-1 * var(--px)), 0); } }
+
+/* warm light: a hearth glow rising from below, a pool over the stage, the total's flash */
+.light { position: absolute; pointer-events: none; mix-blend-mode: plus-lighter; }
+.light.hearth {
+  left: -10%; right: -10%; bottom: -38%; height: 78%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(var(--light-hearth), .42), rgba(var(--light-hearth), .16) 45%, rgba(var(--light-hearth), 0) 72%);
+  animation: breathe 7.5s ease-in-out infinite alternate;
+}
+.light.pool {
+  left: var(--pool-x, 55%); top: var(--pool-y, 48%); width: var(--pool-w, 70vw); height: var(--pool-h, 60vh); translate: -50% -50%;
+  background: radial-gradient(closest-side, rgba(var(--light-candle), .2), rgba(var(--light-candle), .08) 50%, rgba(var(--light-candle), 0));
+  animation: breathe 9s ease-in-out infinite alternate-reverse;
+}
+/* a 96-px canvas stretched over the room, so the total's frame never paints a full-screen layer */
+.light.flash { left: 55%; top: 50%; width: 80vw; height: 92vh; translate: -50% -50%; opacity: 0; will-change: opacity; }
+@keyframes breathe { from { opacity: .78; } to { opacity: 1; } }
+/* the edges fall off into warm plum, never black */
+.vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 100% at 56% 48%, rgba(var(--shadow), 0) 52%, rgba(var(--shadow), .34) 84%, rgba(var(--shadow), .52) 100%); }
+
+/* motes: embers at three depths, added together like light */
+.motes { position: absolute; inset: 0; mix-blend-mode: plus-lighter; }
+.mote { position: absolute; left: var(--x); top: var(--y); animation: rise var(--d) linear var(--delay) infinite; }
+.mote i { display: block; width: var(--s); height: var(--s); background: var(--c); animation: sway var(--sw, 3.2s) ease-in-out var(--delay) infinite alternate; }
+.mote.mid i { box-shadow: 0 0 calc(2 * var(--px)) var(--c), 0 0 calc(5 * var(--px)) var(--c); }
+.mote.far i { opacity: .55; filter: blur(1px); }
+.mote.near i { border-radius: 50%; background: radial-gradient(closest-side, var(--c), rgba(255, 150, 80, 0) 100%); filter: blur(2px); opacity: .5; }
+@keyframes rise { 0% { transform: translate3d(0, 0, 0); opacity: 0; } 8% { opacity: 1; } 78% { opacity: 1; } 100% { transform: translate3d(0, calc(-1 * var(--rise)), 0); opacity: 0; } }
+@keyframes sway { from { transform: translate3d(calc(-1 * var(--sx, 6px)), 0, 0); } to { transform: translate3d(var(--sx, 6px), 0, 0); } }
+
+/* the room stays still under reduced motion (10-tokens.css also stops every ambient loop) */
+.reduce-motion .layer { transform: none !important; }

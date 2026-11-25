@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wickwager</title>
+<meta name="description" content="Wickwager: play poker hands for Chips and Mult, beat every Blind, and fill your Joker rack between Antes.">
+<meta name="theme-color" content="#5A1A41">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 8 8%27 shape-rendering=%27crispEdges%27%3E%3Cpath fill=%27%23FF7A2B%27 d=%27M3 0h2v1h1v3H2V1h1z%27/%3E%3Cpath fill=%27%23FFF3E0%27 d=%27M3 4h2v4H3z%27/%3E%3Cpath fill=%27%23FFD84A%27 d=%27M4 1h1v2H4z%27/%3E%3C/svg%3E">
+<!-- @style -->
+</head>
+<body data-screen="boot" data-busy="0">
+<noscript><p class="noscript">Wickwager needs JavaScript turned on to deal the cards.</p></noscript>
+<!-- the room behind the table: far candles, haze, embers, hearth light (src/ui/05-room.js) -->
+<div class="scene" id="scene" aria-hidden="true"></div>
+<!-- screens mount here (src/ui/00-core.js router) -->
+<div class="app" id="app"></div>
+<!-- light and sparks over the table; never takes pointer events -->
+<div class="fx-light" id="fxl" aria-hidden="true"></div>
+<div class="fx" id="fx" aria-hidden="true"></div>
+<!-- dialogs and sheets, then toasts, then the tooltip plate on top -->
+<div class="dialogs" id="dialogs"></div>
+<div class="toasts" id="toasts" aria-hidden="true"></div>
+<div class="tip" id="tip" role="tooltip" hidden></div>
+<!-- scoring results and errors for screen readers -->
+<div class="sr" id="live" aria-live="polite" aria-atomic="true"></div>
+<!-- @scripts -->
+</body>
+</html>

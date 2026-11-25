@@ -1,0 +1,280 @@
+/* Wickwager chrome: panels, lip panels, pills, buttons, wells, slots, tooltips, dialogs, sheets and toasts.
+   Ported from mockups/ember-lit/lit.css. Every frame is a 9-slice pixel sprite painted by src/ui/00-core.js
+   (TW.UI.paint, Lit's lipPanel / panel / pill / button recipes) and drawn on ::after with border-image, with
+   a soft tinted shadow on ::before, so a panel can move or pulse without its shadow jumping over its fill.
+
+   Classes other screens use (see TW.UI in src/ui/00-core.js):
+     .panel                     lit panel (default fill)   + .warm (Blind, warmer) .deep (Blind score) .rack .dlg-frame
+     .p-head                    a panel's header row (holds a .tag)
+     .tag + .t-ember|.t-pink|.t-lime|.t-cream|.t-cash|.t-vio|.t-blue|.t-red|.t-plum   pill label (Jersey 10)
+     .lbl                       small Tiny5 label
+     .btn + .b-ember|.b-pink|.b-cream|.b-ghost  (+ .big)   pressable button; :disabled is plum; a pressed toggle
+                                segment (.seg) sinks in yellow
+     .well-n + .chips|.mult     a dark opaque number well with a pool of its own colour
+     .copy                      long text in Bricolage Grotesque (10-tokens.css)
+     .tip                       the tooltip plate (#tip)
+     .overlay > .dlg            a dialog (TW.UI.dialog);  .overlay.sheet-wrap > .sheet  a sheet (TW.UI.sheet)
+     .toast                     a toast (TW.UI.toast) */
+
+/* ------------------------------------------------------------ panels */
+.panel { position: relative; isolation: isolate; padding: calc(4 * var(--px)) calc(5 * var(--px)) calc(5 * var(--px)); }
+.panel::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  border-style: solid; border-color: transparent; border-width: calc(4 * var(--px));
+  border-image: var(--frame, var(--f-panel)) 4 fill / calc(4 * var(--px)) stretch; image-rendering: pixelated;
+}
+/* no hairline on the sides or bottom: this tinted shadow draws the bottom edge */
+.panel::before {
+  content: ""; position: absolute; inset: calc(2 * var(--px)) calc(1 * var(--px)) 0; z-index: -2; pointer-events: none;
+  border-radius: calc(4 * var(--px));
+  box-shadow: 0 calc(4 * var(--px)) calc(9 * var(--px)) rgba(var(--shadow), .46), 0 calc(1 * var(--px)) calc(1 * var(--px)) rgba(var(--shadow), .42);
+}
+.panel.warm { --frame: var(--f-panel-warm); }
+.panel.deep { --frame: var(--f-panel-deep); }
+.panel.rack { --frame: var(--f-panel-rack); }
+.panel.boss { --frame: var(--f-boss); }
+.panel.dlg-frame { --frame: var(--f-dialog); }
+.panel.well { --frame: var(--f-well); }
+.panel.well::before { display: none; }
+.p-head { display: flex; align-items: center; justify-content: space-between; gap: calc(3 * var(--px)); margin-bottom: calc(3 * var(--px)); min-width: 0; }
+
+/* ------------------------------------------------------------ pills */
+.tag {
+  position: relative; isolation: isolate; display: inline-flex; align-items: center; gap: calc(2 * var(--px));
+  height: calc(9 * var(--px)); padding: 0 calc(4 * var(--px)); margin: 0; max-width: 100%;
+  font: 400 var(--t-tag)/1 var(--f-display); letter-spacing: .03em; color: var(--ink); white-space: nowrap; text-transform: uppercase;
+}
+.tag::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  border-style: solid; border-color: transparent; border-width: calc(3 * var(--px));
+  border-image: var(--tag, var(--f-pill-ember)) 3 fill / calc(3 * var(--px)) stretch; image-rendering: pixelated;
+}
+.tag::before { content: ""; position: absolute; inset: calc(1 * var(--px)) calc(2 * var(--px)); z-index: -2; border-radius: calc(3 * var(--px)); box-shadow: 0 calc(2 * var(--px)) calc(4 * var(--px)) rgba(var(--shadow), .4); pointer-events: none; }
+/* the count keeps the pill's full ink (a faded count fell under 4.5:1 on the violet and pink pills) */
+.tag .cnt { margin-left: calc(2 * var(--px)); }
+.tag .lv { font: 400 var(--t-label)/1 var(--f-label); text-transform: none; letter-spacing: 0; opacity: .72; margin-left: calc(1 * var(--px)); transform: translateY(1px); }
+.tag .tw { overflow: hidden; text-overflow: clip; }
+.t-ember { --tag: var(--f-pill-ember); color: #2A0A06; }
+.t-pink { --tag: var(--f-pill-pink); color: #2A0418; }
+.t-lime { --tag: var(--f-pill-lime); color: #12260A; }
+.t-cream { --tag: var(--f-pill-cream); color: var(--ink); }
+/* cash: a cream tag with dark amber figures (yellow on cream would not read) */
+.t-cash { --tag: var(--f-pill-cream); color: #7E4A0E; }
+.t-vio { --tag: var(--f-pill-vio); color: #FFFAFF; }
+.t-blue { --tag: var(--f-pill-blue); color: #F4F6FF; }
+.t-red { --tag: var(--f-pill-red); color: #FFF4F0; }
+.t-plum { --tag: var(--f-pill-plum); color: var(--muted); }
+.lbl { font: 400 var(--t-label)/1 var(--f-label); color: var(--muted); white-space: nowrap; }
+/* a label that sits on the open room (the hearth makes the floor bright) rides on a small plum pill to keep 4.5:1 */
+.lbl.on-room { position: relative; isolation: isolate; display: inline-flex; align-items: center; min-height: calc(8 * var(--px)); padding: 0 calc(3 * var(--px)); }
+.lbl.on-room::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  border-style: solid; border-color: transparent; border-width: calc(3 * var(--px));
+  border-image: var(--f-pill-plum) 3 fill / calc(3 * var(--px)) stretch; image-rendering: pixelated;
+}
+
+/* ------------------------------------------------------------ buttons */
+.btn {
+  position: relative; isolation: isolate;
+  display: inline-flex; align-items: center; justify-content: center; gap: calc(2 * var(--px));
+  min-height: calc(12 * var(--px)); padding: 0 calc(4 * var(--px)) calc(1 * var(--px));
+  font: 400 var(--t-tag)/1 var(--f-display); color: var(--ink); white-space: nowrap; text-transform: uppercase; letter-spacing: .03em;
+  transition: transform var(--t-press) var(--ease-out), filter var(--t-fast) var(--ease-out);
+  touch-action: manipulation;
+}
+.btn::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  border-style: solid; border-color: transparent; border-width: calc(4 * var(--px)) calc(4 * var(--px)) calc(5 * var(--px));
+  border-image: var(--btn, var(--f-btn-cream)) 4 4 5 fill / calc(4 * var(--px)) calc(4 * var(--px)) calc(5 * var(--px)) stretch; image-rendering: pixelated;
+}
+.btn::before { content: ""; position: absolute; inset: calc(3 * var(--px)) calc(2 * var(--px)) calc(1 * var(--px)); z-index: -2; border-radius: calc(4 * var(--px)); box-shadow: 0 calc(3 * var(--px)) calc(8 * var(--px)) rgba(var(--shadow), .45), 0 calc(1 * var(--px)) calc(2 * var(--px)) rgba(var(--shadow), .3); pointer-events: none; transition: opacity var(--t-fast) var(--ease-out); }
+.btn > * { position: relative; }
+.btn .spr { flex: none; }
+.btn:active:not(:disabled), .btn.is-down { --btn: var(--btn-down, var(--f-btn-cream-down)); transform: scale(.97); padding-top: calc(1 * var(--px)); padding-bottom: 0; }
+.b-ember { --btn: var(--f-btn-ember); --btn-down: var(--f-btn-ember-down); color: #2A0A06; }
+.b-pink { --btn: var(--f-btn-pink); --btn-down: var(--f-btn-pink-down); color: #2A0418; }
+.b-cream { --btn: var(--f-btn-cream); --btn-down: var(--f-btn-cream-down); color: var(--ink); }
+.b-ghost { --btn: var(--f-btn-ghost); --btn-down: var(--f-btn-ghost); color: var(--cream); }
+.b-ghost::before { box-shadow: 0 calc(2 * var(--px)) calc(6 * var(--px)) rgba(var(--shadow), .3); }
+.btn:disabled, .btn[aria-disabled="true"] { --btn: var(--f-btn-plum); --btn-down: var(--f-btn-plum); color: #C9A2B4; }
+.btn:disabled::before, .btn[aria-disabled="true"]::before { opacity: .35; }
+.btn.big { font-size: var(--t-btn); min-height: calc(16 * var(--px)); padding: 0 calc(6 * var(--px)) calc(1 * var(--px)); }
+.btn.big:active:not(:disabled) { padding-top: calc(1 * var(--px)); padding-bottom: 0; }
+.btn.wide { width: 100%; }
+@media (hover: hover) and (pointer: fine) {
+  .btn:hover:not(:disabled):not([aria-disabled="true"]) { filter: brightness(1.07) saturate(1.05); }
+}
+/* a segmented pair of small buttons (Rank / Suit): the pressed one sinks in yellow, and its label takes a dark bar
+   under it, as the chosen tab does, so the choice reads without telling yellow from cream (WCAG 1.4.1) */
+.seg { display: inline-flex; align-items: center; gap: calc(2 * var(--px)); }
+.seg .lbl { margin-right: calc(1 * var(--px)); color: var(--muted); }
+.seg .btn { min-width: calc(21 * var(--px)); }
+.seg .btn[aria-pressed="true"] { --btn: var(--f-btn-yellow-down); --btn-down: var(--f-btn-yellow-down); padding-top: calc(1 * var(--px)); padding-bottom: 0; color: #2A1404;
+  text-decoration: underline var(--px) solid currentColor; text-underline-offset: calc(1.5 * var(--px)); text-decoration-skip-ink: none; }
+
+/* ------------------------------------------------------------ wells: dark opaque, the number glows in its own colour */
+.well-n { position: relative; isolation: isolate; display: flex; align-items: center; justify-content: center; min-height: calc(22 * var(--px)); }
+.well-n::after {
+  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  border-style: solid; border-color: transparent; border-width: calc(4 * var(--px));
+  border-image: var(--frame) 4 fill / calc(4 * var(--px)) stretch; image-rendering: pixelated;
+}
+/* a pool of the number's own colour inside the dark well, over the opaque fill and under the number */
+.well-n::before { content: ""; position: absolute; inset: 16% 12%; z-index: 0; border-radius: 50%; background: radial-gradient(closest-side, var(--well-glow), transparent); opacity: .6; mix-blend-mode: plus-lighter; pointer-events: none; }
+.well-n > .n, .well-n > .glow-n { position: relative; z-index: 1; }
+.well-n.chips { --frame: var(--f-chips); --well-glow: rgba(74, 98, 255, .55); }
+.well-n.mult { --frame: var(--f-mult); --well-glow: rgba(233, 56, 43, .55); }
+.times { display: grid; place-items: center; opacity: .9; }
+
+/* ------------------------------------------------------------ tooltips (#tip, TW.UI.tip)
+   The plate can be hovered (WCAG 1.4.13): the pointer may rest on it to read, and it closes a moment after the pointer
+   leaves it and its target (00-core.js); Esc closes it on its own. It holds no controls. */
+.tip { position: fixed; left: 0; top: 0; z-index: var(--z-tip); width: max-content; max-width: min(calc(96 * var(--px)), calc(100vw - 16px)); pointer-events: auto; cursor: default; isolation: isolate; padding: calc(4 * var(--px)) calc(5 * var(--px)) calc(5 * var(--px)); transform-origin: var(--tip-origin, 50% 0); }
+.tip[hidden] { display: none; }
+.tip::after { content: ""; position: absolute; inset: 0; z-index: -1; border-style: solid; border-color: transparent; border-width: calc(4 * var(--px)); border-image: var(--f-tip) 4 fill / calc(4 * var(--px)) stretch; image-rendering: pixelated; }
+.tip::before { content: ""; position: absolute; inset: calc(2 * var(--px)); z-index: -2; border-radius: calc(4 * var(--px)); box-shadow: 0 calc(4 * var(--px)) calc(12 * var(--px)) rgba(var(--shadow), .55); }
+.tip .t-name { display: block; font: 400 var(--t-tag)/1.1 var(--f-display); color: var(--cream); letter-spacing: .02em; }
+.tip .t-kind { display: block; margin-top: calc(1 * var(--px)); font: 400 var(--t-label)/1.2 var(--f-label); color: var(--muted); }
+.tip .t-text { margin-top: calc(2 * var(--px)); }
+.tip .t-line { margin-top: calc(2 * var(--px)); }
+.tip .t-warn { margin-top: calc(2 * var(--px)); color: var(--pink-hi); }
+.tip .t-sell { margin-top: calc(3 * var(--px)); display: flex; align-items: center; gap: calc(2 * var(--px)); }
+/* rarity and kind colours, shared by tooltips and sheets */
+.rar-common { color: var(--line); } .rar-uncommon { color: var(--lime); } .rar-rare { color: var(--pink-hi); } .rar-legendary { color: var(--vio-hi); }
+.kind-tarot { color: var(--vio-hi); } .kind-planet { color: var(--chip-hi); } .kind-spectral { color: #AED8F0; }
+.kind-edition { color: var(--ember-hi); } .kind-seal { color: var(--pink-hi); } .kind-enh { color: var(--lime-hi); } .kind-boss { color: var(--vio-hi); } .kind-tag { color: var(--lime-hi); }
+
+/* ------------------------------------------------------------ dialogs and sheets (#dialogs, TW.UI.dialog / sheet) */
+.dialogs { position: fixed; inset: 0; z-index: var(--z-dialog); pointer-events: none; }
+.dialogs:empty { display: none; }
+.overlay { position: fixed; inset: 0; display: grid; place-items: center; padding: calc(4 * var(--px)); pointer-events: auto; background: rgba(var(--shadow), .55); overflow-y: auto; overscroll-behavior: contain; }
+/* a warm pool of light lifts the dialog out of the dimmed table */
+.overlay::before { content: ""; position: fixed; left: 50%; top: 50%; width: min(140vw, 1100px); height: min(110vh, 820px); translate: -50% -50%; pointer-events: none; mix-blend-mode: plus-lighter;
+  background: radial-gradient(closest-side, rgba(255, 150, 80, .22), rgba(255, 128, 64, .08) 55%, rgba(255, 110, 50, 0)); }
+.overlay.clear { background: transparent; }
+.overlay.clear::before { display: none; }
+.dlg { --frame: var(--f-dialog); width: min(calc(150 * var(--px)), 100%); max-height: calc(100dvh - 16px); display: flex; flex-direction: column; padding: calc(4 * var(--px)) calc(7 * var(--px)) calc(6 * var(--px)); }
+.dlg::before { box-shadow: 0 calc(7 * var(--px)) calc(20 * var(--px)) rgba(var(--shadow), .65), 0 calc(1 * var(--px)) calc(2 * var(--px)) rgba(var(--shadow), .45); }
+.dlg.narrow { width: min(calc(112 * var(--px)), 100%); }
+.dlg.wide { width: min(calc(220 * var(--px)), 100%); }
+/* the body scrolls, so it clips: 6 px of room all round (padding, given back by a negative margin, so nothing moves)
+   keeps the focus ring whole on what sits at its edges (Pause's full-width buttons, a first tab, a first card) */
+.dlg .dlg-body { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 6px; margin: -6px; }
+/* a body that scrolls is a focus stop of its own (00-core.js markScroller): its ring sits inside its edge, the dark
+   band inside the yellow, so the dialog's frame never cuts it */
+.dlg .dlg-body[tabindex="0"]:focus-visible { outline-offset: -2px; box-shadow: inset 0 0 0 5px var(--edge); }
+.dlg .acts, .sheet .acts { display: flex; flex-wrap: wrap; gap: calc(4 * var(--px)); justify-content: center; margin-top: calc(4 * var(--px)); }
+.dlg .acts .btn, .sheet .acts .btn { flex: 1 1 0; min-height: calc(13 * var(--px)); }
+.dlg .x-close { position: absolute; right: calc(4 * var(--px)); top: calc(3 * var(--px)); width: calc(12 * var(--px)); height: calc(12 * var(--px)); min-height: 0; padding: 0; }
+/* sheets: anchored to their item on desktop, a bottom sheet on a phone */
+.overlay.sheet-wrap { display: block; background: transparent; }
+.overlay.sheet-wrap::before { display: none; }
+.sheet { --frame: var(--f-dialog); position: fixed; left: 0; top: 0; width: min(calc(104 * var(--px)), calc(100vw - 16px)); padding: calc(4 * var(--px)) calc(6 * var(--px)) calc(6 * var(--px)); transform-origin: var(--sheet-origin, 50% 0); }
+.sheet::before { box-shadow: 0 calc(6 * var(--px)) calc(16 * var(--px)) rgba(var(--shadow), .62), 0 calc(1 * var(--px)) calc(2 * var(--px)) rgba(var(--shadow), .45); }
+.sheet .s-name { font: 400 var(--t-btn)/1 var(--f-display); color: var(--cream); letter-spacing: .02em; padding-right: calc(10 * var(--px)); }
+.sheet .s-kind { margin-top: calc(1 * var(--px)); font: 400 var(--t-label)/1.2 var(--f-label); color: var(--muted); }
+.sheet .s-text { margin-top: calc(3 * var(--px)); }
+.sheet .s-line { margin-top: calc(2 * var(--px)); }
+.sheet .s-why { margin-top: calc(3 * var(--px)); color: var(--pink-hi); font-size: var(--t-copy-s); }
+.sheet .s-move { display: flex; gap: calc(3 * var(--px)); margin-top: calc(3 * var(--px)); }
+.sheet .s-move .btn { flex: 1 1 0; }
+.sheet .x-close { position: absolute; right: calc(3 * var(--px)); top: calc(3 * var(--px)); width: calc(13 * var(--px)); min-height: calc(13 * var(--px)); padding: 0; }
+@media (max-width: 1023px) {
+  .overlay.sheet-wrap { background: rgba(var(--shadow), .5); }
+  .sheet { left: 0 !important; right: 0; top: auto !important; bottom: 0; width: 100%; max-height: 80dvh; overflow-y: auto; transform-origin: 50% 100%;
+    padding: calc(5 * var(--px)) calc(8 * var(--px)) calc(10 * var(--px) + env(safe-area-inset-bottom, 0px)); }
+  .sheet .acts .btn, .sheet .s-move .btn { min-height: 44px; }
+  .sheet .x-close, .dlg .x-close { width: 44px; min-height: 44px; }
+  .dlg .acts .btn { min-height: 44px; }
+  .dlg { padding-left: calc(6 * var(--px)); padding-right: calc(6 * var(--px)); }
+}
+
+/* ------------------------------------------------------------ toasts (#toasts, TW.UI.toast) */
+.toasts { position: fixed; left: 50%; top: calc(6 * var(--px)); translate: -50% 0; z-index: var(--z-toast); display: grid; justify-items: center; gap: calc(3 * var(--px)); width: min(calc(150 * var(--px)), calc(100vw - 16px)); pointer-events: none; }
+.toast { --frame: var(--f-tip); position: relative; isolation: isolate; max-width: 100%; padding: calc(4 * var(--px)) calc(6 * var(--px)) calc(5 * var(--px)); text-align: center; }
+.toast::after { content: ""; position: absolute; inset: 0; z-index: -1; border-style: solid; border-color: transparent; border-width: calc(4 * var(--px)); border-image: var(--frame) 4 fill / calc(4 * var(--px)) stretch; image-rendering: pixelated; }
+.toast::before { content: ""; position: absolute; inset: calc(2 * var(--px)); z-index: -2; border-radius: calc(4 * var(--px)); box-shadow: 0 calc(4 * var(--px)) calc(12 * var(--px)) rgba(var(--shadow), .55); }
+.toast.err { --frame: var(--f-toast-err); }
+.toast.good { --frame: var(--f-toast-good); }
+.toast .copy { font-size: var(--t-copy); }
+/* on the table, toasts sit over the playfield under the racks, never over the Jokers */
+@media (min-width: 1024px) {
+  body:is([data-screen="blind-select"], [data-screen="play"], [data-screen="cashout"], [data-screen="shop"], [data-screen="pack"]) .toasts { left: calc(50% + 55 * var(--px)); top: calc(86 * var(--px)); width: min(calc(150 * var(--px)), calc(100vw - 140 * var(--px))); }
+}
+@media (max-width: 1023px) {
+  .toasts { top: auto; bottom: calc(30 * var(--px) + env(safe-area-inset-bottom, 0px)); }
+  /* over an open pack the bottom is the pack's hand: the note sits under the racks, in the room above the pack */
+  body[data-screen="pack"] .toasts { top: calc(118 * var(--px)); bottom: auto; }
+}
+/* a short window held wide (601 to 760 px tall: 1000 x 700, 900 x 650, 800 x 620) has the table's room between the racks
+   and the hand, so its notes sit there as on the table: under the racks (their foot is 80 art px down), centred over the
+   field beside the status column (112 art px; 64 in the Shop and a pack), never over the Jokers. Over a pack with no
+   dealt hand the note sits flush under the racks, clear of the pack's head; beside a dealt hand it is centred over the
+   options' column, clear of the head's column. At the foot they lay over the hand and the Shop's Buy row, and over a
+   pack on its head, its options or its reading plate (final pass, part 4, final agent C) */
+@media (max-width: 1023px) and (min-height: 601px) and (max-height: 760px) and (orientation: landscape) {
+  body:is([data-screen="blind-select"], [data-screen="play"], [data-screen="cashout"], [data-screen="shop"], [data-screen="pack"]) .toasts {
+    top: calc(84 * var(--px)); bottom: auto; left: calc(50% + 58 * var(--px)); width: min(calc(150 * var(--px)), calc(100vw - 144 * var(--px))); }
+  body:is([data-screen="shop"], [data-screen="pack"]) .toasts { left: calc(50% + 34 * var(--px)); }
+  body[data-screen="pack"]:not(:has(.pack-view.has-hand)) .toasts { top: calc(80 * var(--px)); }
+  body[data-screen="pack"]:has(.pack-view.has-hand) .toasts { left: calc(50% + 84 * var(--px)); width: min(calc(150 * var(--px)), calc(100vw - 185 * var(--px))); }
+}
+
+/* ------------------------------------------------------------ placeholders: a blank Lit card frame with the name in the plate,
+   shown wherever a sprite is missing (TW.UI.sprite), so the table never breaks while the art is still being drawn */
+.ph { position: relative; display: block; width: calc(var(--w) * var(--px)); height: calc(var(--h) * var(--px)); pointer-events: none; }
+.ph-card { clip-path: var(--card-clip); background: var(--edge); }
+.ph-card::before { content: ""; position: absolute; inset: var(--px); clip-path: var(--card-clip); background: linear-gradient(180deg, var(--ph-hi, #F8D6B8) 0 calc(2 * var(--px)), var(--ph-face, #E0A884) calc(2 * var(--px)) calc(100% - 3 * var(--px)), var(--ph-lip, #A85C3E) calc(100% - 3 * var(--px))); }
+.ph-card .ph-win { position: absolute; left: calc(5 * var(--px)); top: calc(7 * var(--px)); width: calc(31 * var(--px)); height: calc(31 * var(--px)); background: linear-gradient(180deg, #2A1036, var(--plum)); box-shadow: 0 0 0 var(--px) var(--edge), 0 var(--px) 0 var(--px) var(--ph-hi, #F8D6B8); }
+.ph-card .ph-win::after { content: "?"; position: absolute; inset: 0; display: grid; place-items: center; font: 400 calc(10 * var(--px))/1 var(--f-display); color: rgba(255, 220, 190, .32); }
+.ph-card .ph-plate { position: absolute; left: calc(3 * var(--px)); right: calc(3 * var(--px)); top: calc(41 * var(--px)); height: calc(11 * var(--px)); background: #2E1328; box-shadow: 0 0 0 var(--px) var(--edge) inset; display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font: 400 var(--t-label)/1 var(--f-label); color: #FFEBDC; white-space: nowrap; letter-spacing: -0.02em; padding: 0 var(--px); }
+.ph-card.ph-k-joker.ph-r-common { --ph-hi: #F8D6B8; --ph-face: #E0A884; --ph-lip: #A85C3E; }
+.ph-card.ph-k-joker.ph-r-uncommon { --ph-hi: #E2FFA6; --ph-face: #7CC12C; --ph-lip: #3F7317; }
+.ph-card.ph-k-joker.ph-r-rare { --ph-hi: #FFB2D6; --ph-face: #E2337F; --ph-lip: #87154C; }
+.ph-card.ph-k-joker.ph-r-legendary { --ph-hi: #CDA8FF; --ph-face: #6F33C9; --ph-lip: #3E1880; }
+.ph-card.ph-k-tarot { --ph-hi: #CDA8FF; --ph-face: #6F33C9; --ph-lip: #3E1880; }
+.ph-card.ph-k-planet { --ph-hi: #A9B8FF; --ph-face: #3346D6; --ph-lip: #1C2489; }
+.ph-card.ph-k-spectral { --ph-hi: #D9F4FF; --ph-face: #7FA6D6; --ph-lip: #2E4078; }
+.ph-card.ph-k-voucher { --ph-hi: #FFFCF5; --ph-face: #F2D3AE; --ph-lip: #BD8C6C; }
+.ph-card.ph-k-pack { --ph-hi: #FFD29C; --ph-face: #E8611F; --ph-lip: #943B13; }
+.ph-card.ph-k-back { --ph-hi: #8C5671; --ph-face: #3E1880; --ph-lip: #1E0B42; }
+.ph-card.ph-k-back .ph-plate, .ph-card.ph-k-back .ph-win { display: none; }
+/* a playing card without its art: cream stock, the rank and suit spelled out in the corner */
+.ph-card.ph-k-card { --ph-hi: #FFFCF5; --ph-face: #FFF3E0; --ph-lip: #DDB08A; }
+.ph-card.ph-k-card .ph-win, .ph-card.ph-k-card .ph-plate { display: none; }
+.ph-card .ph-rank { position: absolute; left: calc(3 * var(--px)); top: calc(2 * var(--px)); font: 400 calc(8 * var(--px))/1 var(--f-display); color: var(--ph-ink, #272152); }
+.ph-card .ph-suit { position: absolute; left: 0; right: 0; bottom: calc(5 * var(--px)); text-align: center; font: 400 var(--t-label)/1 var(--f-label); color: var(--ph-ink, #272152); }
+.ph-card.ph-red { --ph-ink: #B31B3D; }
+.ph-token { border-radius: calc(4 * var(--px)); background: radial-gradient(circle at 35% 30%, var(--ph-hi, #FFD29C), var(--ph-face, #943B13)); box-shadow: 0 0 0 var(--px) var(--edge); display: grid; place-items: center; font: 400 var(--t-label)/1 var(--f-label); color: var(--ink); overflow: hidden; }
+.ph-token.ph-k-tag { --ph-hi: #E2FFA6; --ph-face: #3F7317; border-radius: 50%; }
+.ph-token.ph-k-boss { --ph-hi: #CDA8FF; --ph-face: #3E1880; border-radius: 50%; color: #FFF4FF; }
+.ph-token.ph-k-blind { --ph-hi: #FFF3E0; --ph-face: #DDB08A; }
+.ph-token.ph-k-stake { --ph-hi: #FFB2D6; --ph-face: #87154C; border-radius: 50%; }
+.ph-token.ph-k-icon { background: none; box-shadow: none; }
+
+/* ------------------------------------------------------------ the app root and the stub screens
+   (the stubs in 00-core.js stand in for 20-shop.js and 30-screens.js until those land) */
+.app { position: relative; z-index: var(--z-table); min-height: 100dvh; }
+/* route transitions (00-core.js show()): a lifeless copy of the view that leaves fades over the one that arrives */
+.app.route-ghost { position: absolute; inset: 0 0 auto 0; z-index: calc(var(--z-table) + 1); pointer-events: none; }
+/* the table's main area copy keeps the class .main (its own layout inside), so this rule must outrank 40-table.css's
+   .main { position: relative }: there the copy fell into the page's flow under the table, out of sight, and made the
+   page a screen taller while it faded (a scrollbar flashed on each change of the main area; final pass, part 3) */
+.main.route-ghost-main, .route-ghost-main { position: fixed; z-index: calc(var(--z-table) + 1); margin: 0; pointer-events: none; }
+.route-ghost *, .route-ghost-main * { pointer-events: none !important; }
+.stub-wrap { min-height: 100dvh; display: grid; place-items: center; padding: calc(6 * var(--px)); }
+.stub-wrap.in-shell { min-height: 0; height: 100%; }
+.stub-panel { width: min(calc(150 * var(--px)), 100%); padding: calc(8 * var(--px)) calc(9 * var(--px)) calc(9 * var(--px)); display: grid; gap: calc(5 * var(--px)); justify-items: center; text-align: center; }
+.stub-panel.stub-in { --frame: var(--f-panel); }
+.stub-title { font: 400 calc(2 * var(--t-title)) / 1 var(--f-display); letter-spacing: .04em; color: var(--ember-hi); text-transform: uppercase; filter: var(--glow-ember); }
+.stub-copy { max-width: 42ch; }
+.stub-acts { display: flex; flex-wrap: wrap; gap: calc(4 * var(--px)); justify-content: center; }
+.stub-stats { list-style: none; padding: 0; display: grid; gap: calc(2 * var(--px)); width: 100%; }
+.stub-stats li { display: flex; justify-content: space-between; align-items: baseline; gap: calc(4 * var(--px)); }
+.opt-row { display: flex; align-items: center; justify-content: space-between; gap: calc(4 * var(--px)); padding: calc(2 * var(--px)) 0; flex-wrap: wrap; }
+.stub-opts { display: grid; gap: calc(2 * var(--px)); }
+.hand-table { width: 100%; border-collapse: collapse; }
+.hand-table th { text-align: left; padding: 0 0 calc(2 * var(--px)); }
+.hand-table td { padding: calc(1 * var(--px)) calc(2 * var(--px)) calc(1 * var(--px)) 0; }
+.stub-seed { margin-top: calc(3 * var(--px)); }

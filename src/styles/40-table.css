@@ -1,0 +1,688 @@
+/* Wickwager table: the left column, the racks, Blind select, the hand, the stage, the payout and the cash-out
+   (src/ui/10-table.js). Ported from mockups/ember-lit/lit.css and generalised to real play. Every size and
+   resting offset is a whole number of art pixels (--px); nothing rotates at rest. */
+
+/* ------------------------------------------------------------ the table: left column + playfield */
+.table {
+  position: relative; z-index: var(--z-table);
+  display: grid; grid-template-columns: calc(104 * var(--px)) minmax(0, 1fr); gap: calc(7 * var(--px));
+  height: 100dvh; min-height: calc(290 * var(--px)); padding: calc(5 * var(--px)) calc(6 * var(--px)) calc(5 * var(--px));
+}
+
+/* left column: the Blind score's panel is 48 art px tall, every panel keeps its own height, and the spare height sits
+   above Overview and Options, which keep to the column's foot */
+.col { display: flex; flex-direction: column; gap: calc(6 * var(--px)); min-height: 0; min-width: 0; }
+.col > .w-score { flex: none; height: calc(48 * var(--px)); }
+.col > .w-hand { flex: 0 1 auto; }
+.col > .r-btns { margin-top: auto; }
+.col .row { display: flex; gap: calc(3 * var(--px)); }
+.col .row > * { flex: 1 1 0; min-width: 0; }
+
+.w-blind { padding-bottom: calc(7 * var(--px)); }
+.w-blind .blind-body { display: flex; align-items: center; gap: calc(5 * var(--px)); padding: calc(3 * var(--px)) 0 calc(1 * var(--px)) calc(1 * var(--px)); }
+/* the Blind's pill and the hand's pill keep every word: a line longer than the panel (a long Boss Blind, or a reader's
+   own text spacing, WCAG 1.4.12) wraps to a second line and the pill grows, instead of cutting the name. One line keeps
+   the pill's own height (nine art px). */
+.w-blind .tag, .w-hand .tag { max-width: 100%; height: auto; min-height: calc(9 * var(--px)); line-height: .9; white-space: normal; text-wrap: balance; overflow: visible; }
+.w-blind .tag .tw { overflow: visible; }
+/* the Blind score's pill too: in a narrow panel of the top bar (a window 600 to 799 px wide) "Blind score" and "Blind
+   beaten" ran out of it (final pass, part 4) */
+.w-score .tag { max-width: 100%; height: auto; min-height: calc(9 * var(--px)); line-height: .9; white-space: normal; text-wrap: balance; }
+/* the target's box is all the room beside the token, whatever its number, so a long target is fitted to the plate */
+.target { display: grid; gap: calc(1.5 * var(--px)); justify-items: start; min-width: 0; flex: 1 1 auto; }
+.target .reward { display: inline-flex; align-items: center; gap: calc(2 * var(--px)); margin-top: calc(1 * var(--px)); }
+.w-blind .boss-rule { margin-top: calc(3 * var(--px)); padding-top: calc(3 * var(--px)); border-top: var(--px) solid rgba(205, 168, 255, .18); }
+.w-blind .boss-rule .b-name { display: block; font: 400 var(--t-tag)/1 var(--f-display); letter-spacing: .03em; color: var(--vio-hi); text-transform: uppercase; margin-bottom: calc(1 * var(--px)); }
+.w-blind .boss-rule .copy { font-size: var(--t-copy-s); line-height: 1.35; }
+.w-blind.is-cleared .target .n { opacity: .55; }
+.w-blind .cleared-mark { margin-top: calc(1 * var(--px)); }
+
+/* the candle token: wax (the Blind's emblem), a three-frame stepped flame, and its bloom */
+.candle { position: relative; flex: none; width: calc(17 * var(--px)); display: grid; justify-items: center; }
+.candle .wick { position: relative; width: calc(7 * var(--px)); height: calc(10 * var(--px)); margin-bottom: calc(-1 * var(--px)); }
+.candle .flame {
+  position: absolute; inset: 0; background-image: var(--flame); background-size: calc(21 * var(--px)) calc(10 * var(--px)); background-repeat: no-repeat;
+  image-rendering: pixelated; animation: flicker .9s steps(3, jump-none) infinite;
+}
+.candle .bloom {
+  position: absolute; left: 50%; top: 46%; width: calc(64 * var(--px)); height: calc(64 * var(--px)); translate: -50% -50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255, 232, 186, .9), rgba(255, 190, 116, .55) 22%, rgba(255, 140, 64, .24) 50%, rgba(255, 112, 44, .08) 74%, rgba(255, 110, 40, 0) 100%);
+  mix-blend-mode: plus-lighter; animation: bloom 2.6s ease-in-out infinite alternate;
+}
+@keyframes flicker { from { background-position: 0 0; } to { background-position: calc(-14 * var(--px)) 0; } }
+@keyframes bloom { 0% { opacity: .82; transform: scale(.96); } 45% { opacity: 1; transform: scale(1.03); } 100% { opacity: .88; transform: scale(.99); } }
+.candle.is-out .flame, .candle.is-out .bloom { display: none; }
+/* a Boss Blind's emblem sits in its own cool light instead of a flame */
+.emblem { position: relative; flex: none; display: grid; place-items: center; }
+.emblem .bloom { position: absolute; left: 50%; top: 50%; width: calc(70 * var(--px)); height: calc(70 * var(--px)); translate: -50% -50%; pointer-events: none;
+  background: radial-gradient(closest-side, rgba(205, 168, 255, .55), rgba(139, 70, 238, .26) 40%, rgba(110, 50, 200, .08) 72%, rgba(110, 50, 200, 0)); mix-blend-mode: plus-lighter; animation: bloom 3.4s ease-in-out infinite alternate; }
+.emblem > .spr, .emblem > .ph { position: relative; }
+
+.w-score { display: flex; flex-direction: column; }
+.w-score .p-head { margin-bottom: calc(1 * var(--px)); }
+.w-score .score-n { flex: 1 1 auto; display: flex; align-items: center; justify-content: center; min-height: 0; padding-bottom: calc(1 * var(--px)); }
+
+.w-hand { padding-bottom: calc(7 * var(--px)); }
+.w-hand .cxm { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: stretch; gap: calc(2 * var(--px)); }
+.w-hand .well-n { min-height: calc(34 * var(--px)); overflow: hidden; }
+
+.w-count { display: flex; align-items: center; justify-content: space-between; gap: calc(2 * var(--px)); padding-top: calc(7 * var(--px)); padding-bottom: calc(7 * var(--px)); }
+.w-hands .lbl { color: var(--ember-hi); }
+.w-discards .lbl { color: var(--pink-hi); }
+.w-money { display: grid; gap: calc(2 * var(--px)); justify-items: start; padding-top: calc(6 * var(--px)); padding-bottom: calc(7 * var(--px)); }
+.w-money .lbl { color: var(--money); }
+.w-small { display: grid; gap: calc(2 * var(--px)); justify-items: start; padding-top: calc(6 * var(--px)); padding-bottom: calc(7 * var(--px)); }
+.col .row.r-money > .w-money { flex: 1.3 1 0; }
+.col .r-btns .btn { flex: 1 1 0; }
+.ph-only { display: none !important; }
+
+/* ------------------------------------------------------------ the playfield: racks over the main area */
+.field { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: calc(2 * var(--px)); min-height: 0; min-width: 0; }
+.racks { display: flex; justify-content: space-between; align-items: flex-start; gap: calc(6 * var(--px)); min-width: 0; }
+.rack { --frame: var(--f-panel-rack); flex: none; padding: calc(4 * var(--px)) calc(5 * var(--px)) calc(6 * var(--px)); min-width: 0; }
+.rack .p-head { margin-bottom: calc(4 * var(--px)); }
+.rack-in { display: flex; gap: calc(3 * var(--px)); }
+.rack .slot { display: block; flex: none; width: var(--card-w); height: var(--card-h); }
+.rack .t-inv { color: var(--vio-hi); }
+/* more Jokers than room: the rack overlaps its cards like the hand instead of pushing the consumables off */
+.rack.r-jokers { flex: 1 1 auto; min-width: 0; max-width: calc(var(--n) * var(--card-w) + (var(--n) - 1) * 3 * var(--px) + 10 * var(--px)); }
+.rack.r-jokers .rack-in { gap: 0; }
+.rack.r-jokers .rack-in > * + * { margin-left: min(calc(3 * var(--px)), calc((100% - var(--card-w)) / (var(--n) - 1) - var(--card-w))); }
+.main { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) auto auto; gap: calc(2 * var(--px)); min-height: 0; min-width: 0; }
+
+/* ------------------------------------------------------------ cards, Jokers and consumables share one size and the same layers */
+.card, .jk { position: relative; isolation: isolate; flex: none; display: block; width: var(--card-w); height: var(--card-h); touch-action: pan-y; }
+/* contact shadow (tight and dark) and ambient shadow (wide and soft), both on the table, not on the card */
+.card::before, .jk::before {
+  content: ""; position: absolute; z-index: -1; left: 6%; right: 6%; bottom: calc(-4 * var(--px)); height: calc(10 * var(--px)); border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(var(--shadow), .62), rgba(var(--shadow), .3) 55%, rgba(var(--shadow), 0));
+  transition: transform var(--t-lift) var(--spring), opacity var(--t-lift) var(--ease-out); pointer-events: none;
+}
+.card::after, .jk::after {
+  content: ""; position: absolute; z-index: -1; inset: calc(4 * var(--px)) calc(-4 * var(--px)) calc(-10 * var(--px));
+  background: radial-gradient(closest-side, rgba(var(--shadow), .4), rgba(var(--shadow), .22) 52%, rgba(var(--shadow), .07) 78%, rgba(var(--shadow), 0));
+  transition: transform var(--t-lift) var(--spring), opacity var(--t-lift) var(--ease-out); pointer-events: none;
+}
+.lift { display: block; position: relative; transition: transform var(--t-lift) var(--spring); }
+/* the idle bob is a two-frame pixel hop of one art pixel: it never rotates and never rests between pixels */
+.sway { display: block; position: relative; animation: sway-card var(--sway-d, 3.6s) steps(1, jump-end) var(--sway-delay, 0s) infinite alternate; }
+@keyframes sway-card { 0% { transform: translateY(0); } 100% { transform: translateY(calc(-1 * var(--px))); } }
+.face { position: relative; }
+/* a Seal's badge sits over the card at its spot, so the ribbon's top shows above the card's edge */
+.seal-badge { position: absolute; left: calc(var(--sx) * var(--px)); top: calc(var(--sy) * var(--px)); z-index: 2; }
+/* a fanned hand (10-table.js fanCheck: the next card covers the Seal spot, as in a phone's eight cards): every covered
+   card wears its Seal as a tab over the top edge of the strip that shows, between the index and the pips and clear of
+   both (it covers only the stock above the first pip row), so the Seal is seen on every card; the last card shows its
+   whole face and keeps the art's spot. On a strip narrower than the tab's reach (19 art px) fanCheck moves it left to
+   end at the strip's edge (--tab-x) and, over the index's columns, two art px higher (--tab-b), so the next card
+   never covers it and it never covers the rank */
+.hand.is-fanned .card:not(:last-child):not(.is-dragging) .seal-badge { left: calc(var(--tab-x, 10) * var(--px)); top: calc((var(--tab-b, 5) - var(--h)) * var(--px)); }
+/* a chosen card rises clear of the next one (10 art px; 14 on a phone held upright that has the room), so its Seal
+   needs no tab: it hangs on the strip at the art's own height (--sy), whole and in view, where the Move pair over the
+   hand never reaches (the pair stands just above where a chosen card's top edge rises to on every layout; final pass,
+   part 3: at 360 x 640 the pair hid up to 71 % of a chosen card's tab, which rose 12 art px over that edge). It
+   glides with the card's lift. */
+.hand.is-fanned .card[aria-pressed="true"]:not(:last-child):not(.is-dragging) .seal-badge { top: calc(var(--sy) * var(--px)); }
+.hand.is-fanned .card .seal-badge { transition: top var(--t-lift) var(--spring); }
+.reduce-motion .hand .seal-badge { transition: none; }
+.card.is-censored .seal-badge { filter: grayscale(.8) brightness(.8); }
+/* light on the card: a warm wash from the upper left, clipped to the card's own stepped outline */
+.wash, .sheen, .ed-fx { position: absolute; inset: 0; clip-path: var(--card-clip); pointer-events: none; }
+.wash { background: linear-gradient(158deg, rgba(255, 238, 205, .2) 0%, rgba(255, 238, 205, 0) 38%, rgba(90, 20, 50, 0) 62%, rgba(90, 20, 50, .16) 100%); mix-blend-mode: soft-light; }
+.sheen { overflow: hidden; mix-blend-mode: plus-lighter; }
+.sheen i { position: absolute; top: -10%; bottom: -10%; left: 0; width: 62%; opacity: 0; transform: translateX(-120%) skewX(-14deg);
+  background: linear-gradient(90deg, rgba(255, 190, 130, 0), rgba(255, 190, 130, .16) 36%, rgba(255, 236, 206, .4) 50%, rgba(255, 190, 130, .16) 64%, rgba(255, 190, 130, 0)); }
+/* the hover glint: a soft spot of candlelight that follows the pointer over the card */
+.sheen b { position: absolute; left: 0; top: 0; width: calc(40 * var(--px)); height: calc(40 * var(--px)); margin: calc(-20 * var(--px)) 0 0 calc(-20 * var(--px)); border-radius: 50%; opacity: 0;
+  background: radial-gradient(closest-side, rgba(255, 238, 210, .36), rgba(255, 196, 140, .14) 50%, rgba(255, 180, 120, 0));
+  transition: opacity var(--t-base) var(--ease-out), transform 90ms linear; will-change: transform; }
+.glinting .sheen b { opacity: 1; }
+.card[aria-pressed="true"] .lift { transform: translateY(calc(-10 * var(--px))); }
+.card[aria-pressed="true"]::before { transform: scale(1.14, 1.2); opacity: .48; }
+.card[aria-pressed="true"]::after { transform: translateY(calc(3 * var(--px))) scale(.92); opacity: .62; }
+.card[aria-pressed="true"] .face {
+  filter: drop-shadow(var(--px) 0 0 #FFDDB0) drop-shadow(calc(-1 * var(--px)) 0 0 #FFDDB0) drop-shadow(0 var(--px) 0 #FFDDB0) drop-shadow(0 calc(-1 * var(--px)) 0 #FFDDB0) drop-shadow(0 0 calc(4 * var(--px)) rgba(255, 140, 60, .75));
+}
+@media (hover: hover) and (pointer: fine) {
+  .hand .card:not([aria-pressed="true"]):not(:disabled):hover .lift { transform: translateY(calc(-3 * var(--px))); }
+  .jk:hover .lift { transform: translateY(calc(-3 * var(--px))); }
+}
+.card:disabled { cursor: default; }
+/* a card or Joker with keyboard focus comes up over its neighbours (the hand's cards overlap; 10-table.js sets each
+   one's z-index), so its whole ring shows (WCAG 2.4.7, 2.4.11) */
+.card:focus-visible, .jk:focus-visible { z-index: 30 !important; }
+.card.is-dragging, .jk.is-dragging { z-index: 40 !important; transition: none; }
+.card.is-dragging .lift, .jk.is-dragging .lift { transform: translateY(calc(-6 * var(--px))) scale(1.04); transition: transform 120ms var(--ease-out); }
+
+/* Joker and consumable names sit on the plate drawn into the sprite (00-core.js plateHTML picks the words for the
+   plate's width at this pixel size: the full name, its most telling word, that word a pixel tighter per letter, or
+   the word shortened with a full stop; never clipped mid-letter) */
+.plate {
+  position: absolute; left: calc(4 * var(--px)); right: calc(4 * var(--px)); top: calc(42 * var(--px)); height: calc(9 * var(--px));
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  font: 400 var(--t-label)/1 var(--f-label); color: #FFEBDC; white-space: nowrap; letter-spacing: -0.02em; pointer-events: none;
+}
+.plate.pl-tight { letter-spacing: -1px; }
+/* a Joker switched off by the Boss Blind: dim, cooled, with a small "Off" mark at its foot */
+.jk.is-off .face { filter: grayscale(.85) brightness(.62) contrast(.9); }
+.jk.is-off .off-mark { position: absolute; left: 50%; bottom: calc(-4 * var(--px)); translate: -50% 0; z-index: 3; height: calc(8 * var(--px)); font-size: var(--t-label); }
+.jk .inv-mark { position: absolute; right: calc(-2 * var(--px)); top: calc(-3 * var(--px)); z-index: 3; height: calc(8 * var(--px)); padding: 0 calc(2 * var(--px)); font-size: var(--t-label); }
+
+/* ------------------------------------------------------------ card states from the Boss Blind and the payout */
+/* The Smudge: an unselected card shows only its suit; a violet smear covers the rank and pips */
+.card .smudge { position: absolute; inset: 0; z-index: 2; clip-path: var(--card-clip); pointer-events: none; display: grid; place-items: center;
+  background:
+    radial-gradient(70% 55% at 45% 52%, rgba(139, 70, 238, .96), rgba(83, 32, 160, .94) 70%, rgba(62, 24, 128, .97)),
+    #3E1880; }
+.card .smudge::before { content: ""; position: absolute; inset: 0; opacity: .3; background-image: repeating-conic-gradient(rgba(255, 255, 255, .2) 0 25%, transparent 0 50%); background-size: calc(2 * var(--px)) calc(2 * var(--px)); }
+.card .smudge .num-img { position: relative; }
+.card .smudge .suit-peek { position: absolute; left: calc(2 * var(--px)); top: calc(11 * var(--px)); width: calc(7 * var(--px)); height: calc(7 * var(--px)); background: var(--cream); clip-path: inset(0 round calc(1 * var(--px))); }
+.card .smudge .suit-peek img { position: absolute; left: calc(-2 * var(--px)); top: calc(-11 * var(--px)); }
+.card[aria-pressed="true"] .smudge { display: none; }
+/* The Wash-Out (Enhancements off) and The Censor (Editions and Seals off): the card looks spent */
+.card.is-washed .face, .card.is-censored .face { filter: saturate(.35) brightness(.92); }
+.card.is-washed .wash, .card.is-censored .wash { background: linear-gradient(180deg, rgba(160, 150, 190, .22), rgba(90, 80, 120, .28)); mix-blend-mode: normal; }
+/* on the stage: unscored cards dim, a booed card goes cold and drops */
+.stage .card.is-unscored .lift { opacity: .55; filter: saturate(.6); transform: translateY(calc(4 * var(--px))); }
+.stage .card.is-booed .lift { filter: grayscale(.7) brightness(.7); transform: translateY(calc(6 * var(--px))); }
+.stage .card.is-scoring .lift { transform: translateY(calc(-4 * var(--px))); }
+.stage .card { pointer-events: none; }
+
+/* ------------------------------------------------------------ Editions: the moving light the UI owns (ed-{id});
+   the pixels an Edition changes are baked into the art. Ambient, so not divided by the game speed. */
+.ed-fx { z-index: 1; overflow: hidden; }
+/* Sheen (ed-gloss; ART.md section 11): candlelight on varnish. A hard-edged 45-degree band about 6 art px
+   wide, warm white (about 60 %) between peach rows (about 50 %), never pale blue, crosses from the top left to the
+   bottom right in about 0.9 s in whole steps, then rests off the card. On a playing card the art's bare-stock mask
+   (TW.Art.stockMask) keeps it on the stock and off the index, pips, court, marks and Seal, as the baked band; on a
+   Joker the face masks it. Dither's hum takes the same mask on a card. The mask scales in whole pixels, so the
+   edges it cuts stay crisp. */
+.ed-gloss .ed-fx, .ed-benday .ed-fx { -webkit-mask-image: var(--ed-mask, none); mask-image: var(--ed-mask, none); -webkit-mask-size: 100% 100%; mask-size: 100% 100%; mask-mode: luminance; image-rendering: pixelated; }
+.ed-gloss .ed-fx::before { content: ""; position: absolute; left: calc(-60 * var(--px)); top: calc(-60 * var(--px)); width: calc(72 * var(--px)); height: calc(72 * var(--px)); mix-blend-mode: plus-lighter;
+  background: linear-gradient(135deg, transparent calc(50% - 3.5 * var(--px)), rgba(255, 190, 150, .5) calc(50% - 3.5 * var(--px)), rgba(255, 190, 150, .5) calc(50% - 2.5 * var(--px)),
+    rgba(255, 244, 226, .6) calc(50% - 2.5 * var(--px)), rgba(255, 244, 226, .6) calc(50% + 2.5 * var(--px)),
+    rgba(255, 190, 150, .5) calc(50% + 2.5 * var(--px)), rgba(255, 190, 150, .5) calc(50% + 3.5 * var(--px)), transparent calc(50% + 3.5 * var(--px)));
+  transform: translate(0, 0); animation: ed-sheen 3.2s infinite; }
+@keyframes ed-sheen {
+  0% { transform: translate(0, 0); animation-timing-function: steps(24, end); }
+  28%, 100% { transform: translate(calc(96 * var(--px)), calc(96 * var(--px))); }
+}
+/* Ben-Day: a dither of light dots that steps across the card in whole pixels (four positions, 0 to 3 art px: three
+   steps would stop half an art pixel along) */
+.ed-benday .ed-fx::before { content: ""; position: absolute; inset: 0; mix-blend-mode: plus-lighter; opacity: .22;
+  background-image: radial-gradient(circle at 50% 50%, rgba(255, 200, 230, .9) 0 calc(.5 * var(--px)), transparent calc(.6 * var(--px)));
+  background-size: calc(3 * var(--px)) calc(3 * var(--px)); animation: ed-dither 2.4s steps(4, jump-none) infinite; }
+@keyframes ed-dither { from { background-position: 0 0; opacity: .14; } 50% { opacity: .3; } to { background-position: calc(3 * var(--px)) calc(3 * var(--px)); opacity: .14; } }
+/* Four-Color (Lit's Glitch): a red plate one art px left and a blue plate one art px right of the card's edges
+   (drop shadows, as ART.md section 6 asks), and every 3.4 s two bands slip by whole pixels for a moment */
+.card.ed-fourcolor .face, .jk.ed-fourcolor .face { filter: drop-shadow(calc(-1 * var(--px)) 0 0 #FF2E4AE0) drop-shadow(var(--px) 0 0 #4A62FFE0); }
+.card.ed-fourcolor[aria-pressed="true"] .face {
+  filter: drop-shadow(calc(-1 * var(--px)) 0 0 #FF2E4AE0) drop-shadow(var(--px) 0 0 #4A62FFE0) drop-shadow(var(--px) 0 0 #FFDDB0) drop-shadow(calc(-1 * var(--px)) 0 0 #FFDDB0) drop-shadow(0 var(--px) 0 #FFDDB0) drop-shadow(0 calc(-1 * var(--px)) 0 #FFDDB0) drop-shadow(0 0 calc(4 * var(--px)) rgba(255, 140, 60, .75));
+}
+/* Four-Color: the face stays in register; every 3.4 s two bands slip by whole pixels for a moment (Lit's Glitch) */
+.ed-fourcolor .ed-fx .slice { position: absolute; left: 0; top: 0; opacity: 0; animation: slice-a 3.4s step-end infinite; clip-path: inset(30% 0 62% 0); }
+.ed-fourcolor .ed-fx .slice.s2 { animation-name: slice-b; clip-path: inset(62% 0 26% 0); }
+@keyframes slice-a { 0%, 94.9%, 100% { opacity: 0; transform: translateX(0); } 95% { opacity: 1; transform: translateX(calc(2 * var(--px))); } 97% { opacity: 1; transform: translateX(calc(-1 * var(--px))); } 99.4% { opacity: 0; transform: translateX(0); } }
+@keyframes slice-b { 0%, 96.3%, 100% { opacity: 0; transform: translateX(0); } 96.4% { opacity: 1; transform: translateX(calc(-2 * var(--px))); } 98.4% { opacity: 0; transform: translateX(0); } }
+/* Phantom (ed-inverted; ART.md section 11): the card is an opaque pale ghost, never see-through; what makes it
+   uncanny is a flicker, like a candle in a draught (full, then one 120 ms dip to .55, twice a loop at uneven
+   points) and a one-art-px ghost-blue glow. A Phantom Joker has no baked ghost, so it stays a little faint (.78). */
+.card.ed-inverted .face { filter: drop-shadow(0 0 var(--px) #AED8F0B0); animation: ed-phantom 2.4s steps(1, end) infinite; }
+.jk.ed-inverted .face { opacity: .78; filter: drop-shadow(0 0 var(--px) #AED8F0B0); animation: ed-phantom-jk 2.4s steps(1, end) infinite; }
+.card.ed-inverted[aria-pressed="true"] .face {
+  filter: drop-shadow(0 0 var(--px) #AED8F0B0) drop-shadow(var(--px) 0 0 #FFDDB0) drop-shadow(calc(-1 * var(--px)) 0 0 #FFDDB0) drop-shadow(0 var(--px) 0 #FFDDB0) drop-shadow(0 calc(-1 * var(--px)) 0 #FFDDB0) drop-shadow(0 0 calc(4 * var(--px)) rgba(255, 140, 60, .75));
+}
+@keyframes ed-phantom { 0%, 100% { opacity: 1; } 31% { opacity: .55; } 36% { opacity: 1; } 77% { opacity: .55; } 82% { opacity: 1; } }
+@keyframes ed-phantom-jk { 0%, 100% { opacity: .78; } 31% { opacity: .5; } 36% { opacity: .78; } 77% { opacity: .5; } 82% { opacity: .78; } }
+.reduce-motion .ed-fx .slice { display: none; }
+
+/* ------------------------------------------------------------ the stage, the hand and the deck */
+.stage { grid-row: 1; position: relative; display: grid; place-items: center; min-height: 0; }
+/* the played cards: 5 art px apart, or overlapping like the hand when the stage is narrower than the row (a phone:
+   five cards at 2 px an art pixel are wider than a 390 px screen), so the outer cards never leave the screen */
+.stage-row { --n: 5; position: absolute; left: 0; right: 0; top: 50%; translate: 0 -50%; z-index: 9; display: flex; align-items: center; justify-content: center; }
+.stage-row > .card + .card { margin-left: min(calc(5 * var(--px)), calc((100% - var(--card-w)) / (var(--n) - 1) - var(--card-w))); }
+.stage .card { --arc: 0px; }
+.handzone { grid-row: 2; position: relative; display: flex; align-items: flex-end; justify-content: center; gap: calc(6 * var(--px)); padding: calc(13 * var(--px)) 0 calc(5 * var(--px)); min-width: 0; }
+.hand { --n: 8; position: relative; flex: 1 1 auto; display: flex; align-items: flex-end; justify-content: center; min-width: 0; max-width: calc(var(--card-w) * 8 + 21 * var(--px)); min-height: var(--card-h); }
+/* the held arc is a whole-art-pixel offset, never a rotation */
+.hand .card { transform: translateY(var(--arc, 0px)); }
+.hand .card + .card { margin-left: min(calc(3 * var(--px)), calc((100% - var(--card-w)) / (var(--n) - 1) - var(--card-w))); }
+.deck { position: relative; flex: none; width: var(--card-w); display: grid; justify-items: center; gap: calc(3 * var(--px)); }
+.deck .stack { position: relative; width: var(--card-w); height: var(--card-h); isolation: isolate; }
+.deck .stack::after { content: ""; position: absolute; z-index: -1; inset: calc(8 * var(--px)) calc(2 * var(--px)) calc(-4 * var(--px)); border-radius: calc(5 * var(--px)); box-shadow: 0 calc(6 * var(--px)) calc(10 * var(--px)) rgba(var(--shadow), .5); }
+.deck .stack > * { position: absolute; left: 0; top: 0; }
+.deck .stack > :nth-child(1) { transform: translate(calc(2 * var(--px)), calc(3 * var(--px))); filter: brightness(.62); }
+.deck .stack > :nth-child(2) { transform: translate(var(--px), calc(1.5 * var(--px))); filter: brightness(.8); }
+.deck-count { display: inline-flex; }
+.deck-chip { display: none; }
+.deck-btn { display: grid; justify-items: center; gap: calc(3 * var(--px)); }
+@media (hover: hover) and (pointer: fine) { .deck-btn:hover .stack { transform: translateY(calc(-1 * var(--px))); } }
+
+.controls { grid-row: 3; display: flex; justify-content: center; align-items: center; gap: calc(6 * var(--px)); padding-right: calc(var(--cw) * var(--px) + 6 * var(--px)); }
+.controls .btn.big { min-width: calc(64 * var(--px)); }
+/* "Sort" is plain text on the room, as in the comp: no pill (a pill there reads as a button). A feathered pool of
+   plum shade under it keeps it 4.5:1 on the bright hearth floor without drawing a shape. "Move" over the hand alike. */
+.controls .seg .sort-lbl, .mover .mv-lbl { position: relative; isolation: isolate; margin-right: calc(1 * var(--px)); color: var(--muted); padding: calc(2 * var(--px)) calc(1 * var(--px)); }
+.controls .seg .sort-lbl::before, .mover .mv-lbl::before { content: ""; position: absolute; z-index: -1; inset: calc(-3 * var(--px)) calc(-6 * var(--px)); pointer-events: none;
+  background: radial-gradient(closest-side, rgba(var(--shadow), .76), rgba(var(--shadow), .52) 55%, rgba(var(--shadow), 0)); }
+/* the hand as a group takes focus once a keyboard player has dealt it (10-table.js): its ring sits a little out */
+.hand:focus-visible { --ring-gap: calc(2 * var(--px)); }
+/* Move: while exactly one card is chosen, a pair of arrows over the middle of the hand moves it one place (a click or
+   a tap: the way to reorder without dragging, WCAG 2.5.7). It stands on the room above the hand, clear of the deck
+   chip, and steps aside while anything runs. */
+.mover { position: absolute; z-index: 10; bottom: 100%; left: var(--mv-x, calc((100% - var(--card-w) - 6 * var(--px)) / 2)); translate: -50% 0; margin-bottom: calc(1 * var(--px)); }
+.mover[hidden] { display: none; }
+.mover .btn { min-width: calc(17 * var(--px)); padding: 0 calc(3 * var(--px)) calc(1 * var(--px)); }
+body[data-busy="1"] .mover { visibility: hidden; }
+
+/* ------------------------------------------------------------ Blind select: three Blinds side by side, the current one raised and lit */
+.main[data-screen="blind-select"] { grid-template-rows: minmax(0, 1fr); }
+.blinds { display: grid; grid-template-columns: repeat(3, minmax(0, calc(104 * var(--px)))); justify-content: center; align-items: end; gap: calc(7 * var(--px)); padding: calc(6 * var(--px)) 0 calc(4 * var(--px)); min-height: 0; }
+.blind-card { display: flex; flex-direction: column; gap: calc(3 * var(--px)); padding: calc(5 * var(--px)) calc(6 * var(--px)) calc(6 * var(--px)); min-height: calc(150 * var(--px)); transition: transform var(--t-lift) var(--spring), opacity var(--t-base) var(--ease-out); }
+.blind-card .p-head { margin-bottom: 0; }
+.blind-card.is-current { --frame: var(--f-panel-warm); transform: translateY(calc(-8 * var(--px))); }
+.blind-card.is-current.b-boss { --frame: var(--f-boss); }
+/* the Blinds that are not up yet step back by their art and light, never by fading their text (it must stay 4.5:1) */
+.blind-card:not(.is-current) .bc-emblem { filter: brightness(.7) sepia(.25) saturate(.9); }
+.blind-card:not(.is-current) .bc-target .n, .blind-card:not(.is-current) .bc-reward .n { filter: brightness(.86); }
+.blind-card .bc-emblem { position: relative; display: grid; place-items: center; height: calc(40 * var(--px)); margin: calc(1 * var(--px)) 0; }
+.blind-card.is-current::before { box-shadow: 0 calc(6 * var(--px)) calc(16 * var(--px)) rgba(var(--shadow), .55), 0 0 calc(30 * var(--px)) rgba(255, 140, 60, .16); }
+.blind-card .bc-target { display: grid; justify-items: center; gap: calc(1.5 * var(--px)); }
+.blind-card .bc-reward { display: flex; justify-content: center; align-items: center; gap: calc(2 * var(--px)); }
+.blind-card .bc-sep { height: var(--px); background: rgba(255, 214, 180, .14); margin: calc(1 * var(--px)) 0; }
+.blind-card .bc-rule { text-align: center; }
+/* a Boss rule the layout cuts to two lines (a landscape phone, 200 % zoom) opens its tip with the whole rule */
+.bc-rule.is-cut, .boss-rule.is-cut { cursor: help; }
+.blind-card .bc-rule .b-name { display: block; font: 400 var(--t-tag)/1.05 var(--f-display); color: var(--vio-hi); text-transform: uppercase; letter-spacing: .03em; margin-bottom: calc(1 * var(--px)); }
+.blind-card .bc-tag { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: calc(2 * var(--px)) calc(3 * var(--px)); text-align: left; }
+.blind-card .bc-tag .lbl { grid-column: 1 / -1; color: var(--lime-hi); }
+.blind-card .bc-tag .tag-tok { display: grid; place-items: center; background: none; padding: 0; border-radius: calc(3 * var(--px)); }
+.blind-card .bc-tag .t-text { min-width: 0; }
+.blind-card .bc-tag .t-text b { display: block; font: 400 var(--t-tag)/1.05 var(--f-display); letter-spacing: .02em; color: var(--cream); }
+.blind-card .bc-tag .t-text .copy { font-size: var(--t-copy-s); line-height: 1.3; }
+.blind-card .bc-acts { margin-top: auto; display: grid; gap: calc(3 * var(--px)); }
+.blind-card .bc-acts .btn { width: 100%; }
+.blind-card .bc-status { margin-top: auto; display: flex; justify-content: center; }
+.blind-card.is-cleared .bc-emblem .flame, .blind-card.is-cleared .bc-emblem .bloom { display: none; }
+
+/* ------------------------------------------------------------ effects: sparks, pops, tags, rings, the total */
+.fx { position: fixed; inset: 0; z-index: var(--z-fx); pointer-events: none; overflow: hidden; }
+.fx > * { position: absolute; left: 0; top: 0; }
+.fx-light { position: fixed; inset: 0; z-index: var(--z-fxl); pointer-events: none; overflow: hidden; }
+.fx-light > * { position: absolute; left: 0; top: 0; }
+/* an ember: a crisp pixel with a soft halo drawn as a gradient */
+.pt { width: var(--s); height: var(--s); background: var(--c); }
+.pt::before { content: ""; position: absolute; inset: calc(-1 * var(--g, 6px)); border-radius: 50%; background: radial-gradient(closest-side, var(--c), transparent); opacity: .5; }
+.pop { line-height: 0; }
+.hangtag { display: inline-flex; flex-direction: column; align-items: center; transform-origin: 50% 0; }
+.hangtag .str { width: var(--px); height: calc(4 * var(--px)); background: rgba(255, 226, 190, .7); }
+.hangtag .tag { height: calc(10 * var(--px)); font-size: var(--t-btn); padding: 0 calc(4 * var(--px)); }
+.note-pop .tag { height: calc(10 * var(--px)); font-size: var(--t-btn); }
+.ring { width: var(--r); height: var(--r); translate: -50% -50%; pointer-events: none; }
+/* inside the table, under the plaque: the total's bloom, rings and shards wait at opacity 0 on their own layers */
+.table-fx { position: absolute; inset: 0; z-index: 11; overflow: hidden; pointer-events: none; }
+.table-fx > .kit { position: absolute; left: 0; top: 0; opacity: 0; will-change: transform, opacity; }
+.table-fx > .bloom, .table-fx > .ringc { translate: -50% -50%; }
+.shard { line-height: 0; }
+/* the total: a lit plaque; its total is twice the Blind score's face */
+.plaque { position: absolute; z-index: 12; isolation: isolate; display: grid; justify-items: center; gap: calc(3 * var(--px)); padding: calc(6 * var(--px)) calc(10 * var(--px)) calc(8 * var(--px)); will-change: transform, opacity; max-width: 100%; }
+.plaque::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-style: solid; border-color: transparent; border-width: calc(4 * var(--px)); border-image: var(--f-plaque) 4 fill / calc(4 * var(--px)) stretch; image-rendering: pixelated; }
+.plaque::before { content: ""; position: absolute; inset: calc(2 * var(--px)); z-index: -2; border-radius: calc(5 * var(--px)); box-shadow: 0 calc(7 * var(--px)) calc(18 * var(--px)) rgba(var(--shadow), .6), 0 calc(2 * var(--px)) calc(4 * var(--px)) rgba(var(--shadow), .4); }
+.plaque .eq { display: flex; align-items: center; gap: calc(3 * var(--px)); }
+.plaque .eq .well-n { min-height: calc(19 * var(--px)); padding: 0 calc(5 * var(--px)); }
+.plaque .eq .times { display: grid; place-items: center; }
+.plaque .hn { font: 400 var(--t-btn)/1 var(--f-display); color: var(--ember-hi); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.plaque .tot { margin-top: calc(1 * var(--px)); }
+/* a number on its baked glow: the canvas sits behind the crisp sprite and flares by opacity */
+.glow-n { position: relative; isolation: isolate; display: inline-flex; align-items: center; justify-content: center; line-height: 0; }
+.glow-bake { position: absolute; z-index: -1; pointer-events: none; max-width: none; }
+.glow-n > .num-img { position: relative; }
+.fx > .pop.fly { position: absolute; will-change: transform, opacity; }
+
+/* ------------------------------------------------------------ Blind beaten: the cash-out over the field */
+.overlay.over-stage { display: block; background: rgba(var(--shadow), .55); }
+.overlay.over-stage::before { display: none; }
+.overlay.over-stage .beaten { position: fixed; }
+.overlay .lift-light { position: fixed; translate: -50% -50%; pointer-events: none; mix-blend-mode: plus-lighter; }
+.beaten { --frame: var(--f-dialog); width: min(calc(112 * var(--px)), 100%); padding: calc(4 * var(--px)) calc(7 * var(--px)) calc(5 * var(--px)); }
+.beaten::before { box-shadow: 0 calc(7 * var(--px)) calc(20 * var(--px)) rgba(var(--shadow), .65), 0 calc(1 * var(--px)) calc(2 * var(--px)) rgba(var(--shadow), .45); }
+.beaten .p-head { margin-bottom: calc(2 * var(--px)); }
+.beaten .head { display: flex; align-items: center; gap: calc(5 * var(--px)); padding-bottom: calc(2 * var(--px)); margin-bottom: calc(3 * var(--px)); border-bottom: var(--px) solid rgba(255, 214, 180, .16); }
+/* the score and its target share one baseline: the pill above names the Blind, so nothing repeats it here */
+.beaten .head .vs { display: flex; align-items: flex-end; flex-wrap: wrap; gap: calc(1 * var(--px)) calc(4 * var(--px)); flex: 1 1 auto; min-width: 0; }
+.beaten .head .vs .lbl.t { color: var(--soft); padding-bottom: calc(1 * var(--px)); }
+.cashout { list-style: none; margin: 0; padding: 0; display: grid; gap: calc(1 * var(--px)); }
+.cashout li { display: flex; align-items: center; justify-content: space-between; gap: calc(4 * var(--px)); color: var(--cream); min-height: calc(9 * var(--px)); }
+/* the lines' labels are pixel labels (Tiny5 at 16 px, as in the comp); a long Joker line wraps rather than clips */
+.cashout li .who { display: inline-flex; align-items: center; gap: calc(2 * var(--px)); min-width: 0; color: var(--cream); white-space: normal; line-height: 1.2; }
+.cashout li.total { margin-top: calc(1 * var(--px)); padding-top: calc(2 * var(--px)); border-top: var(--px) solid rgba(255, 214, 180, .16); font: 400 var(--t-btn)/1 var(--f-display); color: var(--cream); text-transform: uppercase; letter-spacing: .03em; }
+.beaten .acts { display: flex; gap: calc(4 * var(--px)); justify-content: center; margin-top: calc(3 * var(--px)); }
+.beaten .acts .btn { flex: 1 1 0; min-height: calc(13 * var(--px)); }
+.beaten-out { opacity: .6; }
+
+/* the payout locks the controls; the deck count on a phone steps aside for the plaque */
+body[data-busy="1"] .controls .btn { pointer-events: none; }
+
+/* the narrow end of the 3 px table (1024 to 1279 px wide, 870 px tall or more): Play hand and Discard keep their
+   label's width, so the row of controls stays under the hand (at 1024 x 900 it ran 53 px into the column and lay over
+   its Options button; final pass, part 4, P2) */
+@media (min-width: 1024px) and (max-width: 1279px) and (min-height: 870px) {
+  .controls .btn.big { min-width: 0; }
+}
+/* the table layout on a window 700 px tall or less (a laptop's browser: 1366 x 620, 1024 x 600): a Boss Blind's emblem,
+   name and three-line rule made the column taller than the window, so Overview and Options fell 29 to 49 px below the
+   fold (final pass, part 4, P1). The Boss's name steps out of its rule (the Blind's pill names it), the column's panels
+   sit an art pixel closer, the Blind score's panel is 40 art px tall instead of 48 and the Chips and Mult wells 32
+   instead of 34. */
+@media (min-width: 1024px) and (max-height: 700px) {
+  .w-blind .boss-rule .b-name { display: none; }
+  .col { gap: calc(5 * var(--px)); }
+  .col > .w-score { height: calc(40 * var(--px)); }
+  .w-hand .well-n { min-height: calc(32 * var(--px)); }
+}
+
+/* ------------------------------------------------------------ phone: --px 2, a compact top strip, the hand edge to edge */
+@media (max-width: 1023px) {
+  .table { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: calc(4 * var(--px)); height: auto; min-height: 100dvh; padding: calc(4 * var(--px)) calc(8 * var(--px)) calc(5 * var(--px)); }
+  .col { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: calc(3 * var(--px)); justify-content: stretch; }
+  .col > .w-blind { grid-area: 1 / 1 / 2 / 8; }
+  .col > .w-score { grid-area: 1 / 8 / 2 / 13; height: auto; }
+  .col > .w-hand { grid-area: 2 / 1 / 3 / 9; }
+  .col > .r-money { grid-area: 2 / 9 / 3 / 13; display: flex; }
+  .col > .r-money > .w-small { display: none; }
+  .col > .r-counts { grid-area: 3 / 1 / 4 / 13; display: grid; grid-template-columns: 1fr 1fr .8fr .8fr auto auto; gap: calc(3 * var(--px)); }
+  .col > .r-btns { display: none; }
+  .r-counts > .ph-only { display: grid !important; }
+  .r-counts > .btn.ph-only { display: inline-flex !important; }
+  /* in the Shop and an open pack the compact bar keeps one row of what matters there: money, Ante, the Blind count, Overview
+     and Options. The Blind, the Blind score, hands and discards wait for the next Blind (the Blind select shows
+     them); a Planet Pack keeps the hand panel, where its pick levels a hand. So the Shop and a pack's dealt hand fit
+     one phone screen (NOTES fix 11). */
+  body:is([data-screen="shop"], [data-screen="pack"]) .col > :is(.w-blind, .w-score) { display: none; }
+  body:is([data-screen="shop"], [data-screen="pack"]):not([data-pack="planet"]) .col > .w-hand { display: none; }
+  body[data-screen="pack"][data-pack="planet"] .col > .w-hand { grid-area: 2 / 1 / 3 / 13; }
+  body:is([data-screen="shop"], [data-screen="pack"]) .col > .r-money { grid-area: 1 / 1 / 2 / 5; }
+  body:is([data-screen="shop"], [data-screen="pack"]) .col > .r-counts { grid-area: 1 / 5 / 2 / 13; grid-template-columns: 1fr 1fr auto auto; }
+  body:is([data-screen="shop"], [data-screen="pack"]) .col > .r-counts > :is(.w-hands, .w-discards) { display: none; }
+  .w-blind .candle, .w-blind .emblem { display: none; }
+  .w-blind .blind-body { padding-top: 0; }
+  .w-blind .boss-rule { margin-top: calc(2 * var(--px)); padding-top: calc(2 * var(--px)); }
+  .w-blind .boss-rule .b-name { display: none; }
+  .panel { padding: calc(4 * var(--px)) calc(5 * var(--px)) calc(5 * var(--px)); }
+  .p-head { margin-bottom: calc(3 * var(--px)); }
+  .w-score .p-head { margin-bottom: calc(3 * var(--px)); }
+  .w-score .score-n { min-height: calc(18 * var(--px)); }
+  .w-money { align-content: center; }
+  .w-count, .w-small { display: grid; justify-items: start; gap: calc(1.5 * var(--px)); padding: calc(4 * var(--px)) calc(4 * var(--px)); }
+  .r-counts .btn { min-height: 44px; min-width: 44px; padding: 0 calc(4 * var(--px)); }
+  .r-counts .btn .t { display: none; }
+  .well-n { min-height: calc(17 * var(--px)); }
+  .w-hand .well-n { min-height: calc(27 * var(--px)); }
+  .w-hand { padding-bottom: calc(5 * var(--px)); }
+  .field { grid-template-rows: auto minmax(0, 1fr); gap: calc(3 * var(--px)); }
+  .main { grid-template-rows: minmax(calc(70 * var(--px)), 1fr) auto auto; gap: calc(3 * var(--px)); }
+  .racks { gap: calc(3 * var(--px)); }
+  .rack { padding: calc(4 * var(--px)) calc(4 * var(--px)) calc(5 * var(--px)); }
+  .rack .p-head { margin-bottom: calc(3 * var(--px)); }
+  .rack.r-jokers { flex: 1 1 auto; min-width: 0; }
+  /* the rack scrolls, so it clips: 6 px of room on the top and the sides (given back by a negative margin, so nothing
+     moves; the snap keeps it at the start) keeps a Joker's focus ring whole, which reaches 5 px out, as the dialog
+     bodies do (final pass, part 3: at 720 x 450 the ring lost its top on every Joker and its left on the first) */
+  .rack.r-jokers .rack-in { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; scroll-snap-type: x mandatory; padding: 6px 6px calc(5 * var(--px)); margin: -6px -6px calc(-5 * var(--px)); scroll-padding-inline: 6px; }
+  .rack.r-jokers .rack-in > * { scroll-snap-align: start; }
+  .rack.r-jokers .rack-in { gap: calc(3 * var(--px)); }
+  .rack.r-jokers .rack-in > * + * { margin-left: 0; }
+  .rack.r-jokers .rack-in::-webkit-scrollbar { display: none; }
+  .rack.r-cons .slot { display: none; }
+  /* the pill shows only the count on a phone; the word stays for a screen reader, so the heading still says what
+     it heads (WCAG 2.4.6) */
+  .rack.r-cons .tag .tw { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .rack.r-cons .rack-in:empty::after { content: ""; display: block; width: calc(20 * var(--px)); height: var(--card-h); }
+  /* plate names at Tiny5's own 16 px grid: crisp, never cut mid-word by the scroller */
+  .plate { font-size: 16px; letter-spacing: 0; }
+  .plate.pl-tight { letter-spacing: -1px; }
+  /* the hand gets the room: more air above it for lifted cards, and it runs edge to edge so each visible strip is 44 px */
+  .handzone { padding: calc(22 * var(--px)) 0 calc(4 * var(--px)); }
+  .hand { max-width: none; width: auto; margin: 0 calc(-8 * var(--px)); }
+  .hand .card + .card { margin-left: calc((100% - var(--card-w)) / (var(--n) - 1) - var(--card-w)); }
+  .handzone > .deck { display: none; }
+  .deck-chip { display: inline-flex; position: absolute; right: 0; bottom: calc(1 * var(--px)); z-index: 2; align-items: center; gap: calc(2 * var(--px)); min-height: 44px; padding: 0 calc(1 * var(--px)); transition: opacity var(--t-base) var(--ease-out); }
+  body[data-busy="1"] .deck-chip { opacity: 0; }
+  /* the Move pair stands over the middle of the hand, which runs edge to edge (no deck beside it), with touch-sized keys */
+  .mover { --mv-x: 50%; }
+  .mover .btn { min-width: 44px; min-height: 44px; }
+  /* a chosen card rises clear of the hand on a phone */
+  .hand .card[aria-pressed="true"] .lift { transform: translateY(calc(-14 * var(--px))); }
+  .controls { padding-right: 0; gap: calc(3 * var(--px)); }
+  .controls .btn.big { flex: 1 1 0; min-width: 0; padding: 0 calc(3 * var(--px)) calc(1 * var(--px)); min-height: calc(22 * var(--px)); }
+  .controls .seg { flex: none; gap: calc(2 * var(--px)); }
+  .controls .seg .lbl { display: none; }
+  .controls .seg .btn { min-width: calc(24 * var(--px)); min-height: calc(22 * var(--px)); padding: 0 calc(3 * var(--px)) calc(1 * var(--px)); }
+  .beaten { width: min(100%, calc(180 * var(--px))); padding-left: calc(6 * var(--px)); padding-right: calc(6 * var(--px)); }
+  .beaten .acts .btn { min-height: 44px; }
+  /* the total keeps its weight on a phone: Jersey 10 on its 3x grid, a step above the lines and the button */
+  .cashout li.total { font-size: 30px; }
+  .plaque { padding: calc(5 * var(--px)) calc(8 * var(--px)) calc(6 * var(--px)); gap: calc(2 * var(--px)); }
+  .plaque .eq .well-n { min-height: calc(15 * var(--px)); }
+  .hangtag .tag, .note-pop .tag { font-size: var(--t-tag); height: calc(11 * var(--px)); }
+  /* Blind select on a phone: three compact Blinds, the current one wider */
+  .blinds { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: calc(3 * var(--px)); padding: calc(4 * var(--px)) 0 calc(2 * var(--px)); align-items: stretch; }
+  .blind-card { min-height: 0; padding: calc(4 * var(--px)) calc(3 * var(--px)) calc(4 * var(--px)); gap: calc(2 * var(--px)); }
+  .blind-card.is-current { transform: translateY(calc(-4 * var(--px))); }
+  .blind-card .p-head .tag { font-size: 16px; padding: 0 calc(3 * var(--px)); }
+  .blind-card .p-head .bc-state { display: none; }
+  .blind-card .bc-emblem { height: calc(38 * var(--px)); margin: 0; }
+  .blind-card { gap: calc(1 * var(--px)); }
+  .blind-card .bc-sep { display: none; }
+  .blind-card .bc-tag { grid-template-columns: auto minmax(0, 1fr); gap: calc(2 * var(--px)); text-align: left; }
+  .blind-card .bc-tag .lbl { display: none; }
+  .blind-card .bc-tag .t-text b { font-size: 16px; line-height: 1.1; }
+  .blind-card .bc-tag .t-text .copy { display: none; }
+  .blind-card .bc-target { gap: var(--px); }
+  .blind-card .bc-rule { margin-top: calc(1 * var(--px)); }
+  .blind-card .bc-rule .copy { font-size: var(--t-copy-s); }
+  .blind-card .bc-rule .b-name { font-size: 16px; }
+  .blind-card .bc-acts .btn { min-height: 44px; font-size: var(--t-tag); padding: 0 calc(2 * var(--px)); }
+}
+/* a short phone (820 px tall or less, a 360 x 780 Android): the stage gives up room so Play hand and Discard stay in
+   view; the plaque still hangs from the stage's top over the empty air of the hand zone */
+@media (max-width: 1023px) and (max-height: 820px) {
+  .main { grid-template-rows: minmax(calc(46 * var(--px)), 1fr) auto auto; }
+  .handzone { padding-top: calc(18 * var(--px)); }
+  .blind-card .bc-emblem { height: calc(33 * var(--px)); }
+}
+/* compact and wide enough (a tablet, a narrow window): the top bar takes two rows instead of three, Blind, Blind
+   score, Chips x Mult and money side by side over the counts and buttons */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .col > .w-blind { grid-area: 1 / 1 / 2 / 4; }
+  .col > .w-score { grid-area: 1 / 4 / 2 / 6; }
+  .col > .w-hand { grid-area: 1 / 6 / 2 / 10; }
+  .col > .r-money { grid-area: 1 / 10 / 2 / 13; }
+  .col > .r-counts { grid-area: 2 / 1 / 3 / 13; }
+  /* the hand and its buttons keep the table's measure instead of stretching across a tablet */
+  .hand { max-width: calc(var(--card-w) * 8 + 21 * var(--px)); width: 100%; margin: 0 auto; }
+  .hand .card + .card { margin-left: min(calc(3 * var(--px)), calc((100% - var(--card-w)) / (var(--n) - 1) - var(--card-w))); }
+  .controls { width: 100%; max-width: calc(250 * var(--px)); margin: 0 auto; }
+}
+/* ------------------------------------------------------------ a compact window held upright (from 600 px wide, as tall as
+   wide or taller, under 870 px tall: 600 x 800, 700 x 700, 600 x 650): the two rows of the top bar are set out again
+   so neither grows. Three narrow panels in a row of four had the Blind's pill wrap to two lines, "Blind score" run out
+   of its pill, and a Boss rule take five lines, so the bar grew by up to 70 px and pushed Play hand below the fold
+   (final pass, part 4, P1). The first row holds the Blind (half the bar: its pill on one line, the target beside its
+   label, a Boss rule in two lines whose tip and Overview hold it whole), the Blind score and money; the second, Chips
+   x Mult beside hands, discards, Overview and Options. Ante and the Blind count step aside on the table, as on a short
+   phone (the Blind's pill names the Ante); the Shop's and a pack's bar keeps them. */
+@media (min-width: 600px) and (max-width: 1023px) and (max-height: 869px) and (orientation: portrait) {
+  .col > .w-blind { grid-area: 1 / 1 / 2 / 7; }
+  .col > .w-score { grid-area: 1 / 7 / 2 / 10; }
+  .col > .r-money { grid-area: 1 / 10 / 2 / 13; }
+  .col > .w-hand { grid-area: 2 / 1 / 3 / 7; }
+  .col > .r-counts { grid-area: 2 / 7 / 3 / 13; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto; }
+  body:not(:is([data-screen="shop"], [data-screen="pack"])) .r-counts > .w-small.ph-only { display: none !important; }
+  .target { display: flex; flex-wrap: wrap; align-items: center; gap: calc(1 * var(--px)) calc(3 * var(--px)); }
+  .target .reward { margin-top: 0; }
+  .w-blind .boss-rule .copy { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+  .w-score .score-n { min-height: calc(14 * var(--px)); }
+  .w-hand .well-n { min-height: calc(20 * var(--px)); }
+}
+/* ...and 760 px tall or less: the stage gives up the rest of its room, as on a short phone, so the hand and its buttons
+   stay in view under the racks (a chosen card rises 10 art px, as on a short phone, below the Move pair); at the Blind
+   select the candles and the Boss emblem step aside (the pills name the Blinds), a Boss rule keeps up to four lines on
+   its Blind and steps out of the bar, where it would say the same again (the longest takes four from 600 to 639 px wide,
+   with 55 px to spare under it at 600 x 650 and 4 at 600 x 620; at three it lost its last word: final pass, part 4, final
+   agent C). Under 620 px tall the Blinds have no room for a fourth line, so a rule keeps three there (its tip and
+   Overview hold it whole); with four the page scrolled by 18 px at 600 x 600. */
+@media (min-width: 600px) and (max-width: 1023px) and (max-height: 760px) and (orientation: portrait) {
+  .main { grid-template-rows: minmax(0, 1fr) auto auto; gap: calc(2 * var(--px)); }
+  .handzone { padding-top: calc(13 * var(--px)); }
+  .hand .card[aria-pressed="true"] .lift { transform: translateY(calc(-10 * var(--px))); }
+  body[data-screen="blind-select"] .w-blind .boss-rule { display: none; }
+  .blind-card .bc-emblem { display: none; }
+  .blind-card .bc-target { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--px) calc(3 * var(--px)); }
+  .blind-card .bc-rule .copy { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; }
+  @media (max-height: 619px) { .blind-card .bc-rule .copy { -webkit-line-clamp: 3; line-clamp: 3; } }
+}
+/* ------------------------------------------------------------ a short phone held upright (below 600 px wide and 760 px tall
+   or less: 360 x 640, 375 x 667): the top bar tightens so the table fits one screen. The target sits beside its
+   label, the Chips and Mult wells are shorter, hands and discards read on one line beside the two buttons (Ante and
+   the Blind count step aside on the table: the Blind's pill names the Ante), and the stage takes what is left (the
+   plaque hangs from its top over the hand zone, as on every phone). The pixel size stays 2 (10-tokens.css, the one
+   query). */
+@media (max-width: 599px) and (max-height: 760px) {
+  .table { padding-top: calc(3 * var(--px)); padding-bottom: calc(3 * var(--px)); gap: calc(3 * var(--px)); }
+  .target { display: flex; flex-wrap: wrap; align-items: center; gap: calc(1 * var(--px)) calc(3 * var(--px)); }
+  .target .reward { margin-top: 0; }
+  .w-score .score-n { min-height: calc(14 * var(--px)); }
+  .w-hand .well-n { min-height: calc(20 * var(--px)); }
+  .col > .r-counts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto; }
+  .r-counts > .w-small.ph-only { display: none !important; }
+  .w-count { display: flex; align-items: center; justify-content: space-between; gap: calc(2 * var(--px)); min-height: 44px; padding-top: calc(2 * var(--px)); padding-bottom: calc(2 * var(--px)); }
+  .field { gap: calc(2 * var(--px)); }
+  .rack { padding-bottom: calc(4 * var(--px)); }
+  .rack .p-head { margin-bottom: calc(2 * var(--px)); }
+  .main { grid-template-rows: minmax(0, 1fr) auto auto; gap: calc(2 * var(--px)); }
+  .handzone { padding-top: calc(13 * var(--px)); }
+  /* the stage over the hand is too short here to lift the Move pair (36 px at 360 x 640, the pair's keys 44): a chosen
+     card rises 10 art px, as on the table and a landscape phone, so its Seal at the art's height stays below the pair */
+  .hand .card[aria-pressed="true"] .lift { transform: translateY(calc(-10 * var(--px))); }
+  /* in the Shop and a pack the bar is one line, the money beside the two buttons (Ante and the Blind count step
+     aside); before a Blind the Chips x Mult panel has nothing to show yet, so the money takes its row, on one line */
+  body:is([data-screen="shop"], [data-screen="pack"]) .col > .r-money { grid-area: 1 / 1 / 2 / 9; }
+  body:is([data-screen="shop"], [data-screen="pack"]) .col > .r-counts { grid-area: 1 / 9 / 2 / 13; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  body[data-screen="blind-select"] .col > .w-hand { display: none; }
+  body[data-screen="blind-select"] .col > .r-money { grid-area: 2 / 1 / 3 / 13; }
+  body:is([data-screen="shop"], [data-screen="pack"], [data-screen="blind-select"]) .col > .r-money > .w-money { display: flex; align-items: center; justify-content: space-between; gap: calc(2 * var(--px)); min-height: 44px; padding-top: calc(2 * var(--px)); padding-bottom: calc(2 * var(--px)); }
+}
+
+/* ------------------------------------------------------------ a landscape phone (compact, wider than tall and 600 px tall
+   or less: 844 x 390, 932 x 430, 667 x 375), and since part 4 a short window held wide up to 760 px tall (its own block
+   below gives back what a phone sets aside). The phone's top bar would leave no room for the hand, so the column comes
+   back as a narrow status column at the left: the Blind and its target, the Blind score beside the money, Chips x
+   Mult, then hands and discards (label over number) beside the two buttons. The field keeps the racks over the
+   stage, and Play hand, Sort and Discard stand in a column beside the hand, so the whole table fits one screen at
+   2 px an art pixel (the pixel size keeps its one query). The notch and the home bar keep their safe areas. */
+@media (max-width: 1023px) and (max-height: 760px) and (orientation: landscape) {
+  .table { grid-template-columns: calc(112 * var(--px)) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: calc(4 * var(--px)); height: 100dvh; min-height: 0;
+    padding: calc(4 * var(--px)) max(calc(6 * var(--px)), env(safe-area-inset-right, 0px)) max(calc(4 * var(--px)), env(safe-area-inset-bottom, 0px)) max(calc(6 * var(--px)), env(safe-area-inset-left, 0px)); }
+  .col { align-content: start; }
+  .col > .w-blind { grid-area: 1 / 1 / 2 / 13; }
+  .col > .w-score { grid-area: 2 / 1 / 3 / 9; }
+  .col > .r-money { grid-area: 2 / 9 / 3 / 13; }
+  .col > .w-hand { grid-area: 3 / 1 / 4 / 13; }
+  /* hands and discards take what their labels need beside the two 44 px buttons, a little closer to their edges
+     ("Discards" ran 9 px out of a 59 px panel; final pass, part 4) */
+  .col > .r-counts { grid-area: 4 / 1 / 5 / 13; grid-template-columns: minmax(min-content, 1fr) minmax(min-content, 1fr) auto auto; gap: calc(2 * var(--px)); }
+  .r-counts > .w-count { padding-left: calc(3 * var(--px)); padding-right: calc(3 * var(--px)); }
+  .r-counts > .w-small.ph-only { display: none !important; }
+  .target { display: flex; flex-wrap: wrap; align-items: center; gap: calc(1 * var(--px)) calc(3 * var(--px)); }
+  .target .reward { margin-top: 0; }
+  /* a long Boss rule keeps two lines here; a rule cut short opens its tip with the whole rule on hover, a tap or focus
+     (10-table.js markClamped), and Overview shows it whole */
+  .w-blind .boss-rule .copy { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+  .w-score .score-n { min-height: calc(14 * var(--px)); }
+  .w-hand .well-n { min-height: calc(20 * var(--px)); }
+  /* in the Shop and a pack the column keeps money, Ante, the Blind count and the buttons (a Planet Pack keeps the
+     hand panel) */
+  body:is([data-screen="shop"], [data-screen="pack"]) .col > .r-money { grid-area: 1 / 1 / 2 / 13; }
+  body:is([data-screen="shop"], [data-screen="pack"]) .col > .r-counts { grid-area: 2 / 1 / 3 / 13; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto auto; }
+  body:is([data-screen="shop"], [data-screen="pack"]) .r-counts > .w-small.ph-only { display: grid !important; }
+  body[data-screen="pack"][data-pack="planet"] .col > .w-hand { grid-area: 3 / 1 / 4 / 13; }
+  /* the play field: the racks over the stage, the hand with its three buttons in a column at its right */
+  .field { gap: calc(3 * var(--px)); }
+  .main:is([data-screen="play"], [data-screen="cashout"]) { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: minmax(0, 1fr) auto; column-gap: calc(5 * var(--px)); row-gap: 0; }
+  .main:is([data-screen="play"], [data-screen="cashout"]) > .stage { grid-area: 1 / 1 / 2 / 3; }
+  .main:is([data-screen="play"], [data-screen="cashout"]) > .handzone { grid-area: 2 / 1 / 3 / 2; padding: calc(10 * var(--px)) 0 calc(3 * var(--px)); }
+  .main:is([data-screen="play"], [data-screen="cashout"]) > .controls { grid-area: 2 / 2 / 3 / 3; display: flex; flex-direction: column; align-items: stretch; justify-content: flex-end; gap: calc(3 * var(--px));
+    width: calc(56 * var(--px)); max-width: none; margin: 0; padding: 0 0 calc(3 * var(--px)); }
+  .controls .btn.big { flex: none; }
+  .controls .seg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .controls .seg .btn { min-width: 0; }
+  .hand { max-width: none; width: auto; margin: 0; }
+  /* the strips: 55 px at 844 x 390, but the smallest landscape phone (667 x 375) leaves the hand 289 px, so each covered
+     card shows a 30 px strip (15 art px): WCAG 2.5.8's 24 px and more, less than the 44 px of the menus. There is no
+     clean room for more: the column holds the Blind, the Blind score, money, Chips x Mult, hands, discards and two 44 px
+     buttons; Play hand, Sort and Discard need their 56 art px column; and the stage row over the hand is about 53 px
+     tall there, too short to take them. Each strip stays a whole tap target, and each Seal tab moves onto its strip
+     (fanCheck). (Final pass, part 3, F6.) */
+  .hand .card + .card { margin-left: min(calc(3 * var(--px)), calc((100% - var(--card-w)) / (var(--n) - 1) - var(--card-w))); }
+  .hand .card[aria-pressed="true"] .lift { transform: translateY(calc(-10 * var(--px))); }
+  /* the played cards land over the hand, clear of the button column */
+  .main:is([data-screen="play"], [data-screen="cashout"]) .stage-row { right: calc(61 * var(--px)); }
+  /* Blind select: three compact Blinds under the racks; the candle steps aside (the pill names the Blind), the target
+     reads on one line and Play and Skip sit side by side */
+  .blinds { padding: calc(5 * var(--px)) 0 calc(1 * var(--px)); }
+  .blind-card .bc-emblem { display: none; }
+  .blind-card .bc-target { grid-auto-flow: column; justify-content: center; align-items: center; gap: calc(3 * var(--px)); }
+  .blind-card .bc-rule .copy { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+  .blind-card .bc-acts { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
+}
+/* the landscape column in the Shop and an open pack holds only money, Ante, the Blind count and the two buttons, so it
+   narrows and the field gets the room (50-shop.css lays the Shop and the pack out beside it); the table never scrolls: the
+   outer cards' arc and the table's shadows stay inside the screen */
+@media (max-width: 1023px) and (max-height: 760px) and (orientation: landscape) {
+  .table { overflow-y: clip; }
+  body:is([data-screen="shop"], [data-screen="pack"]) .table { grid-template-columns: calc(64 * var(--px)) minmax(0, 1fr); }
+  body:is([data-screen="shop"], [data-screen="pack"]) .col > .r-counts { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}
+/* ------------------------------------------------------------ a short window held wide (below 1024 px wide, wider than tall
+   and 601 to 760 px tall: 1000 x 700, 900 x 650, 800 x 620, a browser window shrunk on a laptop) takes the
+   landscape phone's layout above: its top bar of two rows left Play hand and Discard below the fold (by 13 to 81 px,
+   and by up to 172 px more on a Boss Blind, whose rule took four lines in it; final pass, part 4, P1). A window has
+   more height than a phone, so the column gives back what the phone set aside: the Blind's candle (or the Boss's
+   emblem), the whole Boss rule, money beside Ante and the Blind count on a row of their own, and readouts as tall as
+   the top bar's; the Blind select keeps its candles, and its Blinds stand at the foot of the stage as at the table. */
+@media (max-width: 1023px) and (min-height: 601px) and (max-height: 760px) and (orientation: landscape) {
+  .w-blind .candle, .w-blind .emblem { display: grid; }
+  .w-blind .blind-body { padding-top: calc(2 * var(--px)); }
+  .w-blind .boss-rule .copy { display: block; -webkit-line-clamp: none; line-clamp: none; overflow: visible; }
+  .w-score .score-n { min-height: calc(18 * var(--px)); }
+  .w-hand .well-n { min-height: calc(27 * var(--px)); }
+  /* on the table (the Shop and a pack keep the narrow column above) the panels stand in the table layout's order: the
+     Blind, the Blind score, Chips x Mult, hands and discards, money beside Ante and the Blind count, then Overview and
+     Options with their names at the column's foot, as on the table: the last row takes the height left over and they
+     sit at its foot (final pass, part 4, final agent C: they stood under the money row, the column empty below them) */
+  body:not(:is([data-screen="shop"], [data-screen="pack"])) .col { grid-template-rows: repeat(5, auto) 1fr; }
+  body:not(:is([data-screen="shop"], [data-screen="pack"])) .col > .w-score { grid-area: 2 / 1 / 3 / 13; }
+  body:not(:is([data-screen="shop"], [data-screen="pack"])) .col > .w-hand { grid-area: 3 / 1 / 4 / 13; }
+  body:not(:is([data-screen="shop"], [data-screen="pack"])) .col > .r-counts { grid-area: 4 / 1 / 5 / 13; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  body:not(:is([data-screen="shop"], [data-screen="pack"])) .col > .r-counts > .btn.ph-only { display: none !important; }
+  body:not(:is([data-screen="shop"], [data-screen="pack"])) .col > .r-money { grid-area: 5 / 1 / 6 / 13; }
+  body:not(:is([data-screen="shop"], [data-screen="pack"])) .col > .r-money > .w-small { display: grid; }
+  body:not(:is([data-screen="shop"], [data-screen="pack"])) .col > .r-btns { grid-area: 6 / 1 / 7 / 13; display: flex; }
+  .col > .r-btns .btn { min-height: 44px; }
+  .blinds { align-items: end; }
+  .blind-card .bc-emblem { display: grid; height: calc(33 * var(--px)); }
+  .blind-card .bc-rule .copy { -webkit-line-clamp: 4; line-clamp: 4; }
+}
+/* a short phone held upright at the Blind select: the three Blinds keep their target, reward, Tag or rule and their
+   buttons; the candles step aside (the pills name the Blinds), so they fit under the racks on a 640 px screen */
+@media (max-width: 599px) and (max-height: 700px) {
+  .blind-card .bc-emblem { display: none; }
+  .blind-card .bc-target { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: var(--px) calc(3 * var(--px)); }
+}
+/* the Shop and a pack on a short upright phone have a fixed height: the dealt hand's outer cards and the table's
+   shadows stay inside the screen instead of scrolling it */
+@media (max-width: 599px) and (max-height: 760px) {
+  body:is([data-screen="shop"], [data-screen="pack"]) .table { overflow-y: clip; }
+}

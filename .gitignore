@@ -1,0 +1,30 @@
+# Wickwager. The public repository holds the game's sources (src/), its tests (tests/), its tools (tools/) and the
+# design documents. Everything below stays on the machine it was made on.
+
+# Local-only: working notes, design sources and reviews, never published
+/BUILD-LOG.md
+/REQUESTS.md
+/CONTENT.md
+/ORIGINALITY.local.md
+*.local.md
+/content/
+/tools/checks/
+/mockups/
+/legacy/
+/.claude/
+
+# Local-only test data: the tests that need it skip without it (tests/local-data.mjs says why)
+/tests/local/
+
+# Generated: node tools/build.mjs writes index.html, node tools/gallery.mjs writes gallery.html
+/index.html
+/gallery.html
+node_modules/
+
+# Written by the e2e scenarios: screenshots (tests/e2e/*.mjs save into shots/ unless SHOTS_DIR or SHOTS says otherwise)
+/shots/
+
+# Machine files
+.DS_Store
+Thumbs.db
+desktop.ini

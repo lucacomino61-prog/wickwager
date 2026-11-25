@@ -1,0 +1,460 @@
+/* Wickwager Shop and Booster Packs (src/ui/20-shop.js), in the Ember Lit language (mockups/ember-lit): a warm
+   lit stall at the foot of the table, cards under cream price tags with dark amber figures (cash is never gold),
+   a pack that bursts open on the stage with its cards dealt out, and the hand a Tarot or Ghost Pack deals.
+   Every size and resting offset is a whole number of art pixels (--px); nothing rotates at rest. The chrome
+   is the table's (20-chrome.css): .panel frames, .tag pills, .btn buttons, .jk and .card layers. */
+
+/* ------------------------------------------------------------ the Shop */
+.main[data-screen="shop"] { grid-template-rows: minmax(0, 1fr); }
+.shop {
+  align-self: end; justify-self: center; width: max-content; max-width: 100%; max-height: 100%; min-height: 0;
+  display: flex; flex-direction: column;
+  padding: calc(4 * var(--px)) calc(7 * var(--px)) calc(6 * var(--px));
+}
+/* the head row holds the Shop's two controls, always in view: Reroll (pink) and the way out (ember) */
+.shop > .sh-head { flex: none; align-items: center; flex-wrap: wrap; gap: calc(3 * var(--px)) calc(6 * var(--px)); margin-bottom: calc(3 * var(--px)); }
+.sh-ctls { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: calc(3 * var(--px)) calc(5 * var(--px)); margin-left: auto; }
+.sh-ctl { display: flex; align-items: center; gap: calc(3 * var(--px)); }
+.sh-ctl .btn { min-height: calc(13 * var(--px)); padding: 0 calc(5 * var(--px)) calc(1 * var(--px)); }
+.c-next .btn { font-size: var(--t-btn); min-height: calc(14 * var(--px)); padding: 0 calc(6 * var(--px)) calc(1 * var(--px)); }
+.c-reroll .btn { gap: calc(3 * var(--px)); }
+.c-reroll .r-cost { opacity: .84; }
+.ctl-note { color: var(--pink-hi); white-space: nowrap; }
+/* the shelves scroll inside the panel when they are taller than it, so they clip: 6 px more room all round, given back
+   by a negative margin so nothing moves, and as much scroll padding keep a focused item's ring whole (final pass, part 4,
+   P3: Night Market's rings lost 2 to 5 px at 1024 x 900) */
+.shop-grid {
+  display: grid; grid-template-columns: minmax(0, max-content);
+  gap: calc(7 * var(--px)); align-items: start;
+  min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin;
+  padding: 6px calc(1 * var(--px) + 6px) calc(1 * var(--px) + 6px); margin: -6px; scroll-padding: 6px;
+}
+.shelf { display: flex; flex-wrap: wrap; align-items: stretch; gap: calc(5 * var(--px)) calc(10 * var(--px)); min-width: 0; }
+
+/* one item, the same for every kind: the art under its price tag beside its name, kind and text, and Buy in a row
+   of its own at the item's foot, level with the art's bottom edge (so every Buy in a row lines up) */
+.si { position: relative; display: grid; grid-template-columns: var(--card-w) calc(54 * var(--px)); grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-areas: "art info" "art buy"; column-gap: calc(5 * var(--px)); row-gap: calc(2 * var(--px)); }
+/* the art keeps its own height (the price tag over the card), so an Edition's pill hangs over the card's foot rather than
+   under the whole item, near the next row's price tag (final pass, part 4), and a sold slot's mark sits on its slot */
+.si-art { grid-area: art; align-self: start; position: relative; padding-top: calc(6 * var(--px)); }
+.si-info { grid-area: info; display: flex; flex-direction: column; gap: calc(1.5 * var(--px)); min-width: 0; padding-top: calc(6 * var(--px)); }
+.si-buy { grid-area: buy; display: grid; gap: calc(1 * var(--px)); align-content: end; width: 100%; }
+.si-buy .btn { width: 100%; }
+.si-name { font: 400 var(--t-tag)/1.05 var(--f-display); letter-spacing: .02em; color: var(--cream); overflow-wrap: anywhere; text-wrap: balance; }
+/* a pack's name keeps a two-line box, so the line under it sits at the same height in every pack */
+.si-pack .si-name { min-height: calc(2.1em); }
+.si-kind { font: 400 var(--t-label)/1.15 var(--f-label); color: var(--muted); }
+.si-text { font-size: var(--t-copy-s); line-height: 1.32; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; line-clamp: 5; overflow: hidden; }
+.si-pick { font-size: var(--t-copy-s); line-height: 1.25; color: var(--lime-hi); }
+.si-why { font-size: var(--t-copy-s); line-height: 1.25; color: var(--pink-hi); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; }
+.si-face { display: block; }
+/* Night Market (a fourth item in a row; 20-shop.js sets .dense): on the table layout both rows share one grid of four
+   columns, so their items line up, and on a narrower table each item's text column gives up width (never the art):
+   the lower row stays one row instead of wrapping into the scroller, at 1440 x 900, 1366 x 768 and 1024 x 768 alike.
+   A pack's kind line only repeats its name there ("Jumbo Booster Pack" under "Jumbo Card Pack") and steps aside. */
+@media (min-width: 1024px) {
+  .shop.dense .shelf { display: grid; grid-template-columns: repeat(4, minmax(0, calc(var(--card-w) + 59 * var(--px)))); gap: calc(5 * var(--px)) calc(6 * var(--px)); }
+  .shop.dense .si { grid-template-columns: var(--card-w) minmax(0, 1fr); column-gap: calc(4 * var(--px)); }
+  .shop.dense .si-pack .si-kind { display: none; }
+  .shop.dense .si-text { -webkit-line-clamp: 6; line-clamp: 6; }
+}
+/* the table layout on a short window (a laptop's browser at 2 px an art pixel): two rows of items with five lines of
+   text each were taller than the room under the racks, so the lower row's Buy buttons sat below the panel's fold,
+   reached only by scrolling the shelves (three of five at 1366 x 620 and 1024 x 600, and Night Market's at 1366 x 768;
+   final pass, part 4, P1). Each item's text keeps three lines at 820 px tall or less with Night Market (its rows of
+   four are taller) and at 760 px or less without, and two at 700 px or less, its kind line stepping aside (the frame
+   and the Edition's pill tell it) and the shelves sitting closer; the whole text is on the item's sheet, a click on its
+   art away. A laptop's 1366 x 768 or 1024 x 768 keeps the five-item Shop as it was. */
+@media (min-width: 1024px) and (max-height: 820px) {
+  .shop.dense .si-text { -webkit-line-clamp: 3; line-clamp: 3; }
+}
+@media (min-width: 1024px) and (max-height: 760px) {
+  .si-text { -webkit-line-clamp: 3; line-clamp: 3; }
+}
+@media (min-width: 1024px) and (max-height: 700px) {
+  .si-text, .shop.dense .si-text { -webkit-line-clamp: 2; line-clamp: 2; }
+  .si-kind { display: none; }
+  .shop { padding-top: calc(3 * var(--px)); padding-bottom: calc(4 * var(--px)); }
+  .shop-grid { gap: calc(4 * var(--px)); }
+}
+
+/* the price tag: cream with dark amber figures, clipped over the card's top edge */
+.si .price { position: absolute; z-index: 4; top: 0; left: 50%; translate: -50% 0; height: calc(10 * var(--px)); font-size: var(--t-btn); padding: 0 calc(4 * var(--px)); pointer-events: none; }
+/* a Tag's discount: a small lime sticker on the card's top-right corner, under the price tag and clear of the name */
+.si .sale { position: absolute; z-index: 5; top: calc(11 * var(--px)); right: calc(1 * var(--px)); height: calc(8 * var(--px)); padding: 0 calc(2 * var(--px)); font: 400 var(--t-label)/1 var(--f-label); text-transform: none; letter-spacing: 0; pointer-events: none; }
+.si .ed-pill, .pk-opt .ed-pill { position: absolute; z-index: 4; left: 50%; bottom: calc(-3 * var(--px)); translate: -50% 0; height: calc(8 * var(--px)); padding: 0 calc(3 * var(--px)); font: 400 var(--t-label)/1 var(--f-label); text-transform: none; letter-spacing: 0; pointer-events: none; }
+/* not affordable (or no room): the tag cools to plum and the reason sits under Buy */
+.si.is-short .price { --tag: var(--f-pill-plum); color: var(--muted); }
+.si.is-short .si-face .face { filter: saturate(.75) brightness(.9); }
+
+/* a sold slot keeps its place: the dotted rim of an empty slot and a plum pill */
+.si.is-sold .slot { display: block; width: var(--card-w); height: var(--card-h); }
+.si.is-sold .sold-mark { position: absolute; left: 50%; top: calc(50% + 3 * var(--px)); translate: -50% -50%; }
+.si.is-sold { grid-template-rows: auto; grid-template-areas: "art info"; }
+
+/* Vouchers owned and the Tags at work, under a hairline */
+.sh-foot { display: flex; flex-wrap: wrap; align-items: center; gap: calc(3 * var(--px)) calc(10 * var(--px)); padding-top: calc(3 * var(--px)); border-top: var(--px) solid rgba(255, 214, 180, .14); }
+.own-v { display: flex; flex-wrap: wrap; align-items: center; gap: calc(2 * var(--px)); }
+.own-v > .lbl { margin-right: calc(1 * var(--px)); color: var(--cream-2); }
+.own-pill { height: calc(8 * var(--px)); padding: 0 calc(3 * var(--px)); font: 400 var(--t-label)/1 var(--f-label); text-transform: none; letter-spacing: 0; cursor: help; }
+.kind-voucher { color: var(--cream-2); }
+.kind-pack { color: var(--ember-hi); }
+.shop-empty { display: grid; place-items: center; gap: calc(4 * var(--px)); align-self: center; }
+
+/* ------------------------------------------------------------ Tags that wait (the Shop's foot, and over the Blind select) */
+.tags-waiting { display: flex; flex-wrap: wrap; align-items: center; gap: calc(2 * var(--px)) calc(5 * var(--px)); min-width: 0; }
+.tags-waiting .tw-head { color: var(--lime-hi); }
+.tw-tag { position: relative; display: inline-flex; align-items: center; gap: calc(2 * var(--px)); padding: calc(1 * var(--px)) calc(2 * var(--px)) calc(1 * var(--px)) 0; border-radius: calc(3 * var(--px)); cursor: help; }
+.tw-tok { position: relative; display: grid; place-items: center; isolation: isolate; }
+/* the token sits in a small pool of its own lime light */
+.tw-tok::before { content: ""; position: absolute; z-index: -1; left: 50%; top: 50%; width: calc(30 * var(--px)); height: calc(30 * var(--px)); translate: -50% -50%; border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(196, 242, 110, .34), rgba(158, 224, 60, .1) 60%, rgba(158, 224, 60, 0)); mix-blend-mode: plus-lighter; pointer-events: none; }
+.tw-txt { display: grid; gap: calc(1 * var(--px)); text-align: left; }
+.tw-txt b { font: 400 var(--t-tag)/1 var(--f-display); color: var(--cream); letter-spacing: .02em; white-space: nowrap; }
+.tw-txt .lbl { color: var(--lime-hi); }
+.tw-tag.is-in-use .tw-txt .lbl { color: var(--ember-hi); }
+/* on the table's Blind select the strip gets a rack panel of its own, above the three Blinds */
+.tags-waiting.on-blinds { position: relative; isolation: isolate; justify-self: start; align-self: start; padding: calc(3 * var(--px)) calc(6 * var(--px)) calc(4 * var(--px)) calc(5 * var(--px)); margin: calc(2 * var(--px)) 0 0; }
+.tags-waiting.on-blinds::after { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; border-style: solid; border-color: transparent; border-width: calc(4 * var(--px));
+  border-image: var(--f-panel-rack) 4 fill / calc(4 * var(--px)) stretch; image-rendering: pixelated; }
+.tags-waiting.on-blinds::before { content: ""; position: absolute; inset: calc(2 * var(--px)) calc(1 * var(--px)) 0; z-index: -2; border-radius: calc(4 * var(--px)); box-shadow: 0 calc(4 * var(--px)) calc(9 * var(--px)) rgba(var(--shadow), .4); pointer-events: none; }
+.main[data-screen="blind-select"]:has(> .tags-waiting) { grid-template-rows: auto minmax(0, 1fr); }
+.main[data-screen="blind-select"]:has(> .tags-waiting) > .blinds { grid-row: 2; }
+
+/* ------------------------------------------------------------ an open Booster Pack: its cards on the stage, the dealt hand below */
+.main[data-screen="pack"] { grid-template-rows: minmax(0, 1fr); }
+.pack-view { position: relative; display: grid; grid-template-rows: minmax(0, 1fr) auto; min-height: 0; height: 100%; }
+/* the cards never move when the reading plate changes height (it follows the pointer): without a dealt hand
+   they hang from a fixed point near the middle and the plate grows downward; with one they sit just above it */
+.pk-stage { display: grid; align-content: start; justify-items: center; gap: calc(4 * var(--px)); min-height: 0; padding: clamp(calc(2 * var(--px)), 10vh, calc(36 * var(--px))) 0 calc(2 * var(--px)); }
+.pack-view.has-hand .pk-stage { align-content: end; gap: calc(3 * var(--px)); padding: 0 0 calc(2 * var(--px)); }
+.pk-head { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: calc(3 * var(--px)) calc(6 * var(--px)); }
+.pk-picks { display: inline-flex; align-items: center; gap: calc(2 * var(--px)); }
+.pk-picks .lbl { color: var(--cream-2); }
+.pk-opts { display: flex; justify-content: safe center; align-items: flex-start; gap: calc(6 * var(--px)); max-width: 100%; padding-top: calc(4 * var(--px)); }
+/* while the keyboard is in a row that scrolls, its soft snap holds off, so a focused option comes whole into view (its
+   ring too) where the snap had pulled the row back to centre the option before it (final pass, part 4, P3) */
+.pk-opts:has(:focus-visible) { scroll-snap-type: none; }
+.pk-opt { position: relative; display: grid; justify-items: center; gap: calc(4 * var(--px)); flex: none; }
+.pk-art { position: relative; isolation: isolate; }
+/* the option the plate reads rises a little in its own pool of candlelight */
+.pk-art::before { content: ""; position: absolute; z-index: -1; left: 50%; top: 46%; width: calc(70 * var(--px)); height: calc(80 * var(--px)); translate: -50% -50%; border-radius: 50%; opacity: 0;
+  background: radial-gradient(closest-side, rgba(var(--light-candle), .34), rgba(var(--light-candle), .1) 55%, rgba(var(--light-candle), 0)); mix-blend-mode: plus-lighter; pointer-events: none;
+  transition: opacity var(--t-base) var(--ease-out); }
+.pk-opt.is-cur .pk-art::before { opacity: 1; }
+.pk-opt.is-cur .pk-face .lift { transform: translateY(calc(-4 * var(--px))); }
+.pk-opt .pk-pick { width: var(--card-w); }
+.pk-opt.is-picked .pk-face { opacity: .3; filter: saturate(.5); }
+.pk-opt.is-picked .pk-done { height: calc(12 * var(--px)); }
+.pk-face { display: block; }
+.pk-detail { width: min(100%, calc(196 * var(--px))); min-height: calc(26 * var(--px)); padding: calc(3 * var(--px)) calc(7 * var(--px)) calc(4 * var(--px)); }
+.pd-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: calc(1 * var(--px)) calc(4 * var(--px)); }
+.pd-name { font: 400 var(--t-btn)/1 var(--f-display); color: var(--cream); letter-spacing: .02em; }
+.pd-kind { font: 400 var(--t-label)/1.2 var(--f-label); color: var(--muted); }
+.pd-text { margin-top: calc(2 * var(--px)); }
+.pd-line { margin-top: calc(1 * var(--px)); font-size: var(--t-copy-s); color: var(--cream-2); }
+.pd-why { margin-top: calc(2 * var(--px)); font-size: var(--t-copy-s); color: var(--pink-hi); }
+.pd-ok { margin-top: calc(2 * var(--px)); font-size: var(--t-copy-s); color: var(--lime-hi); }
+/* the dealt hand: the reading plate at its left, the table's hand (arc, overlap, lift) under a violet label,
+   the deck at its right. The bottom padding is the room the held arc and the cards' table shadow need. */
+.pk-handzone { display: grid; grid-template-columns: calc(86 * var(--px)) minmax(0, 1fr) var(--card-w); align-items: end; gap: calc(6 * var(--px)); padding: calc(1 * var(--px)) 0 calc(12 * var(--px)); min-width: 0; }
+/* one fixed height that holds the longest reading whole (its effect, a note and the status), so the plate never
+   scrolls and the zone (and the cards above it) keeps one height while the options are read; it may stand taller than
+   the hand. The copy keeps its CSS size at either pixel size, so at 2 px (a laptop's window, below) the plate grows
+   wider rather than twice as tall. overflow stays auto only as a guard for a longer text. (Final pass, part 2: capped
+   at the hand's height it cut 30 of the 36 Tarot and Spectral readings at 1024 x 768 and 9 at 1440 x 900.) */
+.pk-handzone .pk-detail { width: auto; min-height: 0; align-self: center; height: calc(84 * var(--px)); overflow-y: auto; scrollbar-width: thin; }
+@media (min-width: 1024px) and (max-height: 869px) {
+  .pk-handzone { grid-template-columns: calc(120 * var(--px)) minmax(0, 1fr) var(--card-w); }
+  .pk-handzone .pk-detail { height: calc(104 * var(--px)); }
+}
+/* on the table layout the stage's one column is the field's width, never the row's: six cards wider than the field
+   carried the column with them, and the reading plate centred in it ran off the window (final pass, part 4, P2) */
+@media (min-width: 1024px) {
+  .pk-stage { grid-template-columns: minmax(0, 1fr); }
+}
+/* the narrow end of the 3 px table (1024 to 1279 px wide, 870 px tall or more: a 1024 x 900 window, an iPad Pro held
+   upright at 1024 x 1366). A pack of six (a Jumbo or Mega Card, Tarot or Planet Pack) is wider than the field there, so
+   its sixth card ran off the window with its Use button: the row draws its cards closer and scrolls sideways inside
+   the field, as the compact layout's packs of six do, with a thin scrollbar under it for a mouse and 6 px of room round
+   it for the focus ring. Beside a Tarot or Ghost Pack's dealt hand the reading plate narrows to 70 art px and the deck
+   steps aside, as in the compact layout's packs, so the hand's strips are 44 px at 1024 px and wider above
+   (16 px before); the plate stands taller instead (it may stand taller than the hand). The Shop's shelves hold two
+   items a row, each text column narrowing to fit (one stood in each row, and Night Market's four-column rows squeezed
+   the text to a letter a line and laid the art over the next item's Buy). */
+@media (min-width: 1024px) and (max-width: 1279px) and (min-height: 870px) {
+  .pk-opts.is-many { gap: calc(4 * var(--px)); overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin;
+    padding: calc(4 * var(--px)) 6px 6px; margin: 0 -6px -6px; scroll-padding-inline: 6px; }
+  .pk-handzone { grid-template-columns: calc(70 * var(--px)) minmax(0, 1fr); column-gap: calc(4 * var(--px)); }
+  .pk-handzone > .pk-deck { display: none; }
+  .pk-handzone .pk-detail { height: calc(100 * var(--px)); }
+  .shelf, .shop.dense .shelf { display: grid; grid-template-columns: repeat(2, minmax(0, max-content)); gap: calc(5 * var(--px)); }
+  .si, .shop.dense .si { grid-template-columns: var(--card-w) minmax(0, calc(54 * var(--px))); column-gap: calc(5 * var(--px)); }
+}
+.pk-handcol { display: grid; justify-items: center; gap: calc(1 * var(--px)); min-width: 0; }
+.pk-hand-lbl { color: var(--vio-hi); }
+.pk-hand.hand { width: 100%; padding-top: calc(9 * var(--px)); }
+.pk-deck { position: absolute; right: 0; bottom: calc(11 * var(--px)); }
+.pk-handzone .pk-deck { position: relative; right: auto; bottom: auto; }
+.fx > .flyer { will-change: transform, opacity; }
+
+/* ------------------------------------------------------------ compact (below 1024 px): --px 2. The Shop and a pack fit
+   one phone screen (NOTES fix 11): the column becomes a one-row bar here (40-table.css), the Shop's controls sit in
+   its head row, and each item stands as a column (art, a two-line taste of its effect, Buy) */
+@media (max-width: 1023px) {
+  .shop { width: 100%; align-self: start; padding: calc(4 * var(--px)) calc(5 * var(--px)) calc(5 * var(--px)); }
+  .shop > .sh-head { min-height: 44px; margin-bottom: calc(2 * var(--px)); gap: calc(2 * var(--px)) calc(3 * var(--px)); }
+  .sh-ctls { gap: calc(3 * var(--px)); }
+  .sh-ctl .btn, .c-next .btn { min-height: 44px; font-size: var(--t-tag); padding: 0 calc(4 * var(--px)) calc(1 * var(--px)); }
+  .ctl-note { display: none; }
+  .shop-grid { overflow: visible; gap: calc(5 * var(--px)); justify-content: stretch; grid-template-columns: minmax(0, 1fr); }
+  .shelf { gap: calc(3 * var(--px)); justify-content: flex-start; }
+  .si { grid-template-columns: calc(var(--card-w) + 4 * var(--px)); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "art" "info" "buy"; justify-items: center; row-gap: calc(2 * var(--px)); }
+  .si-info { padding-top: 0; width: 100%; text-align: center; gap: 0; }
+  /* a plate on the art already names Jokers, Tarot, Planet and Spectral cards and Vouchers; a pack is named below */
+  .si.has-plate .si-name, .si-kind, .si-pick { display: none; }
+  .si-name { font: 400 var(--t-label)/1.15 var(--f-label); letter-spacing: 0; }
+  .si-pack .si-name { min-height: calc(2.3em); }
+  .si-pack .si-text { display: none; }
+  .si-text { font-size: var(--t-copy-s); line-height: 1.25; -webkit-line-clamp: 2; line-clamp: 2; }
+  .si .price { height: calc(10 * var(--px)); font-size: var(--t-tag); padding: 0 calc(3 * var(--px)); }
+  .si-buy .btn { min-height: 44px; }
+  .si-why { display: none; }
+  .si.is-sold { grid-template-areas: "art"; grid-template-rows: auto; }
+  .si.is-sold .si-info { display: none; }
+  .tw-txt b { font-size: 16px; }
+  .own-pill { min-height: 0; }
+
+  .pack-view { height: auto; }
+  .pk-stage { padding-top: 0; gap: calc(2 * var(--px)); }
+  .pk-head { min-height: 44px; }
+  /* a Jumbo or Mega pack scrolls sideways, snapping softly */
+  /* the row runs edge to edge (as the hand does), so four cards fit a 360 px phone without scrolling (the table's
+     max-width: 100% would hold it to the field's width, where the fourth card was a sideways scroll away) */
+  .pk-opts { justify-content: safe center; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none; width: calc(100% + 16 * var(--px)); max-width: none; margin: 0 calc(-8 * var(--px)) -2px; gap: calc(3 * var(--px)); padding: calc(5 * var(--px)) calc(2 * var(--px)) 6px; }
+  .pk-opts::-webkit-scrollbar { display: none; }
+  .pk-opt { scroll-snap-align: center; gap: calc(3 * var(--px)); }
+  /* on a phone held upright a pack of four (every normal pack) fits the row whole: the row is no scroller there, so
+     the light behind the option being read never makes it wiggle sideways (only a Jumbo or Mega pack scrolls) */
+  @media (max-width: 599px) { .pk-opts:not(.is-many) { overflow-x: visible; } }
+  .pk-opt .pk-pick, .pk-head .pk-skip { min-height: 44px; }
+  .pk-detail { width: 100%; min-height: 0; padding: calc(2 * var(--px)) calc(5 * var(--px)) calc(3 * var(--px)); }
+  .pd-name { font-size: var(--t-tag); }
+  .pd-text { margin-top: calc(1 * var(--px)); font-size: var(--t-copy-s); line-height: 1.3; }
+  /* the bottom padding is the room the fan's outer cards and their table shadow need, so they never scroll the page */
+  .pk-handzone { grid-template-columns: minmax(0, 1fr); gap: calc(2 * var(--px)); padding: calc(1 * var(--px)) 0 calc(15 * var(--px)); }
+  /* the reading plate keeps a fixed height over the hand, so a tap on a card never moves the hand, and the hand stays
+     in view: on a phone held upright it holds the longest reading whole (four lines and the status at 343 px wide;
+     44 art px cut 16 of the 36 at 390 x 844); 600 px wide and more it is shorter (below), and so are the short and
+     landscape phones' own plates (further below) */
+  .pk-handzone .pk-detail { align-self: stretch; height: calc(62 * var(--px)); max-height: none; overflow-y: auto; }
+  .pk-handcol > .pk-hand-lbl { display: none; }
+  .pk-hand.hand { padding-top: calc(9 * var(--px)); }
+  .pk-deck { display: none; }
+}
+/* compact but wide (a tablet, a narrow window): each item stands as on the table layout again, art beside its name,
+   kind and full text, Buy at its foot; the controls stay in the head row */
+@media (min-width: 600px) and (max-width: 1023px) {
+  .si { grid-template-columns: var(--card-w) calc(54 * var(--px)); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "art info" "art buy"; justify-items: stretch; column-gap: calc(5 * var(--px)); }
+  .shelf { gap: calc(5 * var(--px)) calc(8 * var(--px)); }
+  .si-info { padding-top: calc(6 * var(--px)); text-align: left; gap: calc(1.5 * var(--px)); }
+  .si.has-plate .si-name, .si-kind, .si-pick { display: block; }
+  .si-name { font: 400 var(--t-tag)/1.05 var(--f-display); letter-spacing: .02em; }
+  .si-pack .si-name { min-height: calc(2.1em); }
+  .si-pack .si-text { display: -webkit-box; }
+  .si-text { -webkit-line-clamp: 5; line-clamp: 5; }
+  .si-why { display: -webkit-box; }
+  .si.is-sold { grid-template-areas: "art info"; }
+  /* the reading plate runs nearly the window's width here: three lines and the status at 568 px */
+  .pk-handzone .pk-detail { height: calc(52 * var(--px)); }
+}
+/* ...and a wide compact window 760 px tall or less (1000 x 700, 900 x 650, 800 x 620, 700 x 700) has no height for the
+   racks as well: while a Tarot or Ghost Pack deals its hand they step aside, as on the short upright and the landscape
+   phones (the top bar keeps the money and Overview), so the pack and its whole hand fit one screen and the plate keeps
+   the 52 art px that hold every reading. The hand rests at the foot of the screen, as at the table. (Final pass, part
+   3: with the racks the page scrolled by 26 to 106 px, the hand partly below the fold at 900 x 650 and 800 x 620, and a
+   44 art px plate cut 4 of the 36 readings.) */
+@media (min-width: 600px) and (max-width: 1023px) and (max-height: 760px) {
+  body:has(.pack-view.has-hand) .racks { display: none; }
+  body:has(.pack-view.has-hand) .field { grid-template-rows: minmax(0, 1fr); }
+  .pack-view.has-hand { height: 100%; }
+  /* a Planet Pack's bar takes a second row for the hand panel its pick levels (40-table.css), so the racks step aside
+     for it too (a Mega one scrolled the page by 33 px at 800 x 620). Not on a landscape phone (the query of its block
+     below), which this block also matches from 600 px wide: its status column holds that panel and the pack fits beside
+     the racks, so the Jokers and consumables stay in reach while it is open (final pass, part 3, final agent: they had
+     stepped aside there too, for nothing) */
+  @media not all and (max-height: 760px) and (orientation: landscape) {
+    body[data-screen="pack"][data-pack="planet"] .racks { display: none; }
+    body[data-screen="pack"][data-pack="planet"] .field { grid-template-rows: minmax(0, 1fr); }
+  }
+}
+/* compact with Night Market (.dense): four items to a row, each as wide as its card, so the cards and the lower row
+   (three packs and the Voucher) stay two rows; the two-line taste of each effect steps aside (a tap on the art opens
+   the item's sheet with all of it). The panel reaches a little into the table's side padding so four cards fit 360 px. */
+@media (max-width: 1023px) {
+  .shop.dense { justify-self: stretch; width: auto; max-width: none; margin: 0 calc(-4 * var(--px)); padding-left: calc(2 * var(--px)); padding-right: calc(2 * var(--px)); }
+  .shop.dense .shop-grid { padding-left: 0; padding-right: 0; margin-left: 0; margin-right: 0; }
+  .shop.dense .shelf { display: grid; grid-template-columns: repeat(4, var(--card-w)); justify-content: space-between; column-gap: var(--px); }
+  .shop.dense .si { grid-template-columns: var(--card-w); }
+  .shop.dense .si-text { display: none; }
+}
+@media (min-width: 600px) and (max-width: 1023px) {
+  .shop.dense .shelf { grid-template-columns: repeat(4, minmax(0, max-content)); justify-content: start; column-gap: calc(5 * var(--px)); }
+  .shop.dense .si { grid-template-columns: var(--card-w) calc(40 * var(--px)); }
+  .shop.dense .si-text { display: -webkit-box; }
+}
+/* a short phone held upright (below 600 px wide and 760 px tall or less): the Shop and a pack fill the screen under
+   the racks. The Shop's controls stay in its head row and, when the shelves are taller than what is left (a 360 x 640
+   phone, Night Market), they scroll inside the panel, so the page never does. Items keep their art, price, pack names
+   and Buy; the taste of each effect, the Vouchers owned and the Tags at work step aside (the item's sheet, Overview).
+   A pack's reading plate is shorter and the dealt hand sits closer, so the whole pack fits. */
+@media (max-width: 599px) and (max-height: 760px) {
+  body:is([data-screen="shop"], [data-screen="pack"]) .table { height: 100dvh; min-height: 0; }
+  .shop { max-height: 100%; padding-top: calc(3 * var(--px)); padding-bottom: calc(3 * var(--px)); }
+  .shop-grid { overflow-y: auto; overscroll-behavior: contain; gap: calc(3 * var(--px)); }
+  .si-text, .sh-foot, .si.has-plate .si-info { display: none; }
+  /* the price tag rides lower over the card's top edge (its frame, never the art) and the rows sit closer */
+  .si-art { padding-top: calc(3 * var(--px)); }
+  .si { row-gap: var(--px); }
+  .shop-grid { gap: calc(2 * var(--px)); }
+  .shop { padding-bottom: calc(2 * var(--px)); }
+  .pk-opts { padding-top: calc(3 * var(--px)); }
+  .pk-handzone { padding-bottom: calc(9 * var(--px)); }
+  .pk-hand.hand { padding-top: calc(6 * var(--px)); }
+  /* a pack that deals a hand needs the racks' room here, so they step aside while it is open (as on a landscape
+     phone; the top bar keeps the money and Overview): the reading plate then has a fixed height that holds the
+     longest reading whole (its effect, a note and the status) with no scroll, and the cards never move */
+  body:has(.pack-view.has-hand) .racks { display: none; }
+  body:has(.pack-view.has-hand) .field { grid-template-rows: minmax(0, 1fr); }
+  .pack-view.has-hand { height: 100%; }
+  .pk-handzone .pk-detail { height: calc(66 * var(--px)); }
+}
+
+/* a landscape phone (compact, wider than tall, 600 px tall or less) and a short window held wide up to 760 px tall
+   (since part 4; its Shop stands as in the compact short block further below, and it keeps the racks over a pack).
+   40-table.css narrows the column here to money, Ante, the Blind count and the buttons. The Shop: its pill, Reroll and
+   the way out stand in a column at its left,
+   and the items run in one row to its right (cards, then packs and the Voucher), each art over its price and Buy;
+   names are on the art's plate and the rest is a tap away on the item's sheet. Night Market's seventh item scrolls
+   the row sideways, as a Jumbo pack's cards do. A pack: its name, picks left and Skip stand at the left of its
+   cards with the reading plate at their right; a Tarot or Ghost Pack's dealt hand needs the racks' room, so they
+   step aside while it is open, and the pack takes two columns (below). */
+@media (max-width: 1023px) and (max-height: 760px) and (orientation: landscape) {
+  .shop, .shop.dense { flex-direction: row; align-items: stretch; align-self: stretch; width: 100%; max-height: 100%; margin: 0; gap: calc(5 * var(--px)); padding: calc(4 * var(--px)) calc(5 * var(--px)) calc(4 * var(--px)); }
+  .shop > .sh-head { flex: none; width: calc(60 * var(--px)); min-height: 0; flex-direction: column; align-items: stretch; justify-content: flex-start; margin: 0; }
+  .shop > .sh-head > .tag { align-self: flex-start; }
+  .sh-ctls { flex-direction: column; align-items: stretch; justify-content: flex-end; margin: auto 0 0; }
+  .sh-ctl .btn, .c-next .btn { width: 100%; }
+  /* the row scrolls, so it clips: 6 px of room all round, given back by a negative margin so nothing moves, and as much
+     scroll padding, keep a focused item's ring whole, as the Joker rack does (final pass, part 4, P3: it cut 5 px off the
+     first item's ring, and up to 33 px off an item the row had half in view) */
+  .shop-grid, .shop.dense .shop-grid { flex: 1 1 auto; display: flex; align-items: flex-start; gap: calc(5 * var(--px)); overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none;
+    padding: 6px; margin: -6px; scroll-padding: 6px; }
+  .shop-grid::-webkit-scrollbar { display: none; }
+  .shelf, .shop.dense .shelf { flex: none; display: flex; flex-wrap: nowrap; gap: calc(3 * var(--px)); }
+  .si, .shop.dense .si, .si.is-sold { grid-template-columns: var(--card-w); grid-template-rows: auto auto; grid-template-areas: "art" "buy"; justify-items: stretch; row-gap: calc(2 * var(--px)); }
+  .si.is-sold { grid-template-areas: "art"; }
+  .si-info, .sh-foot { display: none; }
+  body:has(.pack-view.has-hand) .racks { display: none; }
+  body:has(.pack-view.has-hand) .field { grid-template-rows: minmax(0, 1fr); }
+  .pack-view { height: 100%; }
+  .pk-stage { display: grid; grid-template-columns: calc(56 * var(--px)) minmax(0, 1fr) calc(84 * var(--px)); align-items: start; align-content: start; justify-items: stretch; gap: calc(4 * var(--px)); padding: calc(2 * var(--px)) 0 0; }
+  .pk-head { flex-direction: column; align-items: stretch; justify-content: flex-start; gap: calc(3 * var(--px)); min-height: 0; }
+  /* the pack's name keeps every word in a column 56 art px wide: a Jumbo or Mega Card, Planet or Joker Pack's name
+     wraps to a second line and the pill grows, as the Blind's pill does at the table (it ran out of its pill and under
+     the first card: "MEGA PLANET PA"; final pass, part 3, final agent) */
+  .pk-head > .tag { align-self: flex-start; height: auto; min-height: calc(9 * var(--px)); line-height: .9; white-space: normal; text-wrap: balance; }
+  /* the column stands on the open room, where a ghost button's cream text falls under 4.5:1: Skip takes the cream
+     face, as at the Blind select */
+  .pk-head .pk-skip { --btn: var(--f-btn-cream); --btn-down: var(--f-btn-cream-down); color: var(--ink); }
+  .pk-picks { justify-content: space-between; }
+  .pk-opts { width: auto; margin: 0 -2px -2px; padding: calc(4 * var(--px)) 6px 6px; scroll-padding-inline: 6px; justify-content: safe center; }
+  .pk-stage > .pk-detail { width: auto; max-height: calc(var(--card-h) + 28 * var(--px)); overflow-y: auto; }
+  .pk-hand.hand { padding-top: calc(10 * var(--px)); max-width: none; margin: 0; }
+  /* a Tarot or Ghost Pack's dealt hand: two columns. At the left the pack's name stands over picks left and Skip, and
+     under them the reading plate runs to the foot of the hand, so it holds the longest reading whole (its effect, a
+     note and the status) and never scrolls; at the right the options stand just over the dealt hand, which runs the
+     rest of the width. The stage and the hand zone lend their parts to this grid (display: contents; plain boxes with
+     no role). (Final pass, part 3: beside the hand the plate was 117 px tall and cut 22 of the 36 readings by up to
+     81 px, and a plate tall enough there would cover a Mega pack's Use buttons.) */
+  .pack-view.has-hand { grid-template-columns: calc(96 * var(--px)) minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; column-gap: calc(5 * var(--px)); row-gap: calc(3 * var(--px)); padding-top: calc(2 * var(--px)); }
+  .pack-view.has-hand > :is(.pk-stage, .pk-handzone) { display: contents; }
+  .pack-view.has-hand .pk-head { grid-area: 1 / 1 / 2 / 2; display: grid; grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name name" "picks skip"; align-items: center; gap: calc(3 * var(--px)) calc(4 * var(--px)); }
+  .pack-view.has-hand .pk-head > .tag { grid-area: name; justify-self: start; }
+  .pack-view.has-hand .pk-picks { grid-area: picks; justify-content: flex-start; gap: calc(3 * var(--px)); }
+  .pack-view.has-hand .pk-skip { grid-area: skip; }
+  .pack-view.has-hand .pk-opts { grid-area: 1 / 2 / 3 / 3; align-self: end; min-width: 0; }
+  .pack-view.has-hand .pk-detail { grid-area: 2 / 1 / 4 / 2; height: auto; max-height: none; min-height: 0; align-self: stretch; margin-bottom: calc(4 * var(--px)); }
+  /* 6 art px under the dealt hand, so the outer cards (the arc sets them 7 art px lower) keep their focus ring clear of
+     the window's foot (it lost 3 px there with 4; final pass, part 4, P3) */
+  .pack-view.has-hand .pk-handcol { grid-area: 3 / 2 / 4 / 3; padding-bottom: calc(6 * var(--px)); }
+}
+/* a short window held wide (601 to 760 px tall: 1000 x 700, 900 x 650, 800 x 620) lays a pack out as a landscape phone
+   does, but has the height a phone lacks: the racks stay over a Tarot or Ghost Pack and its dealt hand, so a held Tarot
+   can act on the hand's chosen cards and a Joker or consumable can be sold while the pack is open (final pass, part 4,
+   P4: on those windows the racks had stepped aside for every pack that deals a hand and for every Planet Pack) */
+@media (max-width: 1023px) and (min-height: 601px) and (max-height: 760px) and (orientation: landscape) {
+  body:has(.pack-view.has-hand) .racks { display: flex; }
+  body:has(.pack-view.has-hand) .field { grid-template-rows: auto minmax(0, 1fr); }
+  /* a pack with no dealt hand (a Card, Planet or Joker Pack) has the height for its head above its cards, as in the
+     compact layout: its name, picks left and Skip in a row, the cards under them across the field's width, the reading
+     plate under the cards. Beside a head column and the plate, a Mega pack's sixth card was a sideways scroll away at
+     900 x 650 and 800 x 620 */
+  /* it hangs a little way down the stage, as at the table, so the plate grows downward and the cards never move */
+  .pack-view:not(.has-hand) .pk-stage { grid-template-columns: minmax(0, 1fr); justify-items: center; gap: calc(3 * var(--px)); padding: clamp(calc(2 * var(--px)), 6vh, calc(24 * var(--px))) 0 0; }
+  .pack-view:not(.has-hand) .pk-head { flex-direction: row; align-items: center; justify-content: center; gap: calc(3 * var(--px)) calc(6 * var(--px)); min-height: 44px; }
+  .pack-view:not(.has-hand) .pk-head > .tag { align-self: center; white-space: nowrap; }
+  .pack-view:not(.has-hand) .pk-picks { justify-content: flex-start; }
+  .pack-view:not(.has-hand) .pk-opts { width: 100%; }
+  .pack-view:not(.has-hand) .pk-stage > .pk-detail { width: min(100%, calc(196 * var(--px))); max-height: none; overflow: visible; }
+}
+/* the Tags strip over the Blind select has no row to spare on a landscape phone or a short upright one: there the
+   Tags at work are told by the skip's toast and listed in Overview (Waiting), and the three Blinds keep the room */
+@media (max-width: 1023px) and (max-height: 600px) and (orientation: landscape), (max-width: 599px) and (max-height: 760px) {
+  .main[data-screen="blind-select"] > .tags-waiting { display: none; }
+  .main[data-screen="blind-select"]:has(> .tags-waiting) { grid-template-rows: minmax(0, 1fr); }
+  .main[data-screen="blind-select"]:has(> .tags-waiting) > .blinds { grid-row: 1; }
+}
+/* ------------------------------------------------------------ a compact window under 870 px tall, from 600 px wide (not a
+   landscape phone, whose Shop is laid out above): two rows of items beside their text left no room for the racks and
+   the Shop together, so the page scrolled by 59 to 526 px and three of the five Buy buttons fell below the fold (final
+   pass, part 4, P1). The Shop keeps its head row (its pill, Reroll and the way out), and its items stand in one row
+   under it, the cards then the packs and the Voucher, each as on a phone held upright: the price tag over the art, a
+   pack's name, a two-line taste of the effect, Buy and why it can't be bought (the whole text is on the item's sheet).
+   Where the window is too narrow for Night Market's seven items the row scrolls sideways, as on a landscape phone. */
+@media (min-width: 600px) and (max-width: 1023px) and (max-height: 869px) {
+  @media not all and (max-height: 600px) and (orientation: landscape) {
+    .shop, .shop.dense { flex-direction: column; align-items: stretch; align-self: end; justify-self: stretch; width: 100%; max-width: none; max-height: 100%; margin: 0; gap: 0;
+      padding: calc(4 * var(--px)) calc(5 * var(--px)) calc(4 * var(--px)); }
+    .shop > .sh-head { width: auto; min-height: 44px; flex-direction: row; align-items: center; justify-content: space-between; margin: 0 0 calc(2 * var(--px)); }
+    .shop > .sh-head > .tag { align-self: center; }
+    .sh-ctls { flex-direction: row; align-items: center; justify-content: flex-end; margin: 0 0 0 auto; }
+    .sh-ctl .btn, .c-next .btn { width: auto; }
+    /* the row scrolls, so it clips: room for a focused item's ring, given back by a negative margin so nothing moves (4 px
+       on top, where the price tag stands over each card and the head's buttons end 4 px above, 6 px elsewhere) */
+    .shop-grid, .shop.dense .shop-grid { display: grid; grid-template-columns: max-content max-content; justify-content: safe center; align-items: start; gap: calc(3 * var(--px)) calc(5 * var(--px));
+      overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; padding: 4px 6px 6px; margin: -4px -6px -6px; scroll-padding: 4px 6px 6px; }
+    .shop-grid::-webkit-scrollbar { display: none; }
+    .shop-grid > .sh-foot { display: flex; grid-column: 1 / -1; }
+    /* the items of a shelf share its three rows (a subgrid): the art, the taste and Buy, so every Buy in the shelf stands
+       at one height and the reason under one never moves the others (final pass, part 4, final agent C: an item beside
+       one that showed its reason took the extra height above its Buy, which dropped 39 px below the rest of the row at
+       900 x 650, 1000 x 700, 800 x 620 and 1023 x 760) */
+    .shelf, .shop.dense .shelf { display: grid; grid-auto-flow: column; grid-template-rows: auto auto auto; gap: calc(2 * var(--px)) calc(3 * var(--px)); }
+    .si, .shop.dense .si { grid-template-columns: calc(var(--card-w) + 4 * var(--px)); grid-row: span 3; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-rows: subgrid; grid-template-areas: "art" "info" "buy"; justify-items: center; column-gap: 0; row-gap: calc(2 * var(--px)); }
+    .si-buy { align-content: start; }
+    .si.is-sold, .shop.dense .si.is-sold { grid-template-areas: "art"; grid-template-rows: auto; }
+    .si-info { display: flex; padding-top: 0; width: 100%; text-align: center; gap: 0; }
+    .si.is-sold .si-info, .si.has-plate .si-name, .si-kind, .si-pick, .si-pack .si-text, .shop.dense .si-pack .si-text { display: none; }
+    /* room under the art for an Edition pill, which hangs over the card's foot, so it never covers the taste */
+    .si-art { padding-bottom: calc(4 * var(--px)); }
+    .si-name { font: 400 var(--t-label)/1.15 var(--f-label); letter-spacing: 0; }
+    .si-pack .si-name { min-height: calc(2.3em); }
+    .si-text, .shop.dense .si-text { display: -webkit-box; font-size: var(--t-copy-s); line-height: 1.25; -webkit-line-clamp: 2; line-clamp: 2; }
+    /* the reason keeps three lines in the item's narrow column: "Your consumable slots are full." needs them there, and
+       read "Your consumabl…" in two (final pass, part 4, final agent C); the Shop stands at the field's foot, with room
+       over it */
+    .si-why { display: -webkit-box; text-align: center; -webkit-line-clamp: 3; line-clamp: 3; }
+  }
+}

@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wickwager sound bench</title>
+<meta name="description" content="Audition every Wickwager sound and both music loops, synthesised in code by src/audio.js, and measure their levels.">
+<meta name="theme-color" content="#5A1A41">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 8 8%27 shape-rendering=%27crispEdges%27%3E%3Cpath fill=%27%23FF7A2B%27 d=%27M3 0h2v1h1v3H2V1h1z%27/%3E%3Cpath fill=%27%23FFF3E0%27 d=%27M3 4h2v4H3z%27/%3E%3Cpath fill=%27%23FFD84A%27 d=%27M4 1h1v2H4z%27/%3E%3C/svg%3E">
+<!-- the game's own embedded fonts (Jersey 10, Tiny5, Bricolage Grotesque; SIL OFL 1.1). Nothing loads from the network. -->
+<link rel="stylesheet" href="../src/styles/00-fonts.css">
+<style>
+  /* Ember Lit tokens, mirrored from src/styles/10-tokens.css so this bench stands alone */
+  :root {
+    --ink: #1E0D19; --plum: #3C2132; --plum-2: #4D2B40; --plum-3: #6A3D55; --plum-4: #8C5671;
+    --cream: #FFF3E0; --cream-2: #F2D3AE; --muted: #EBC3AE; --soft: #D9A892;
+    --chip: #4A62FF; --chip-hi: #A9B8FF; --mult: #E9382B; --mult-hi: #FFB9A6;
+    --money: #FFCE3B; --money-lo: #D18A1D; --lime: #9EE03C; --lime-hi: #E2FFA6;
+    --pink: #FF4C9B; --pink-hi: #FFB2D6; --ember: #FF7A2B; --ember-hi: #FFD29C; --vio: #8B46EE; --vio-hi: #CDA8FF;
+    --b0: #2C1535; --b1: #40173F; --b2: #5A1A41; --b3: #761F3C; --b4: #922B35; --b5: #AE402C; --b6: #C65A26;
+    --shadow: 26, 4, 18; --light-hearth: 255, 122, 52; --light-candle: 255, 186, 110;
+    --f-display: 'Jersey 10', 'Tiny5', ui-monospace, monospace;
+    --f-label: 'Tiny5', 'Jersey 10', ui-monospace, monospace;
+    --f-copy: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --px: 3px;
+    /* panels step their corners 3-1-1, like the 9-slice chrome */
+    --step: polygon(calc(3 * var(--px)) 0, calc(100% - 3 * var(--px)) 0, calc(100% - 3 * var(--px)) var(--px), calc(100% - var(--px)) var(--px),
+      calc(100% - var(--px)) calc(3 * var(--px)), 100% calc(3 * var(--px)), 100% calc(100% - 3 * var(--px)), calc(100% - var(--px)) calc(100% - 3 * var(--px)),
+      calc(100% - var(--px)) calc(100% - var(--px)), calc(100% - 3 * var(--px)) calc(100% - var(--px)), calc(100% - 3 * var(--px)) 100%, calc(3 * var(--px)) 100%,
+      calc(3 * var(--px)) calc(100% - var(--px)), var(--px) calc(100% - var(--px)), var(--px) calc(100% - 3 * var(--px)), 0 calc(100% - 3 * var(--px)),
+      0 calc(3 * var(--px)), var(--px) calc(3 * var(--px)), var(--px) var(--px), calc(3 * var(--px)) var(--px));
+    color-scheme: dark;
+  }
+  @media (max-width: 760px) { :root { --px: 2px; } }
+  * { box-sizing: border-box; }
+  html { overflow-x: clip;
+    background:
+      radial-gradient(80% 560px at 50% 100%, rgba(var(--light-hearth), .45), rgba(var(--light-hearth), .14) 50%, rgba(var(--light-hearth), 0) 100%),
+      linear-gradient(180deg, var(--b0) 0%, var(--b1) 16%, var(--b2) 31%, var(--b3) 45%, var(--b4) 60%, var(--b5) 76%, var(--b6) 100%) var(--b2);
+    min-height: 100%; }
+  body { margin: 0; min-height: 100dvh; color: var(--cream); font: 16px/1.35 var(--f-label); -webkit-font-smoothing: none; overflow-x: clip;
+    -webkit-tap-highlight-color: transparent; }
+  h1, h2, p { margin: 0; }
+  button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; }
+  :focus { outline: none; }
+  :focus-visible { outline: 2px solid #FFF0A0; outline-offset: 3px; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .copy { font-family: var(--f-copy); font-size: 16px; font-weight: 500; line-height: 1.42; font-stretch: 92%; -webkit-font-smoothing: antialiased; text-wrap: pretty; }
+  .k-chips { color: var(--chip-hi); font-weight: 700; } .k-mult { color: var(--mult-hi); font-weight: 700; } .k-money { color: var(--money); font-weight: 700; }
+  .k-name { color: var(--ember-hi); font-weight: 700; } .k-dim { color: var(--muted); }
+
+  .bench { max-width: 1400px; margin: 0 auto; padding: 32px 32px 56px; display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 24px 28px; align-items: start; }
+  .head { grid-column: 1 / -1; display: grid; justify-items: start; gap: 12px; }
+  .head h1 { font: 400 50px/0.9 var(--f-display); letter-spacing: 1px; color: var(--cream); text-shadow: 0 0 18px rgba(255, 140, 60, .45); }
+  .head h1 b { font-weight: 400; color: var(--ember-hi); }
+  .head .lede { max-width: 68ch; color: var(--cream-2); }
+
+  /* panels: a translucent plum fill, a warm lip of light along the top, a tinted shadow below */
+  .panel { position: relative; padding: 16px 18px 18px; background: rgba(46, 15, 36, .7); clip-path: var(--step);
+    box-shadow: inset 0 calc(2 * var(--px)) 0 rgba(255, 210, 156, .5), inset 0 calc(-1 * var(--px)) 0 rgba(var(--shadow), .6); }
+  .panel + .panel { margin-top: 16px; }
+  .panel h2 { font: 400 20px/1 var(--f-display); letter-spacing: 1px; text-transform: uppercase; color: var(--ember-hi); margin-bottom: 12px; }
+
+  .status { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 7px; font: 16px/1 var(--f-label); color: var(--ink);
+    background: var(--cream-2); clip-path: polygon(4px 0, calc(100% - 4px) 0, calc(100% - 4px) 2px, calc(100% - 2px) 2px, calc(100% - 2px) 4px, 100% 4px, 100% calc(100% - 4px), calc(100% - 2px) calc(100% - 4px), calc(100% - 2px) calc(100% - 2px), calc(100% - 4px) calc(100% - 2px), calc(100% - 4px) 100%, 4px 100%, 4px calc(100% - 2px), 2px calc(100% - 2px), 2px calc(100% - 4px), 0 calc(100% - 4px), 0 4px, 2px 4px, 2px 2px, 4px 2px); }
+  .status i { width: 10px; height: 10px; background: var(--plum-4); }
+  .status.on { background: var(--lime-hi); }
+  .status.on i { background: #2E6B0C; }
+
+  /* sliders */
+  .field { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; align-items: baseline; margin-top: 12px; }
+  .field:first-of-type { margin-top: 0; }
+  .field label { font: 16px/1.2 var(--f-label); color: var(--muted); }
+  .field output { font: 400 20px/1 var(--f-display); color: var(--cream); min-width: 3ch; text-align: right; }
+  .field input[type=range] { grid-column: 1 / -1; width: 100%; height: 32px; margin: 0; accent-color: var(--ember); cursor: pointer; }
+  @media (pointer: coarse) { .field input[type=range] { height: 44px; } .check { min-height: 44px; } }
+  .check { display: flex; align-items: center; gap: 10px; margin-top: 12px; min-height: 28px; font: 16px/1.2 var(--f-label); color: var(--muted); cursor: pointer; }
+  .check input { width: 20px; height: 20px; margin: 0; accent-color: var(--ember); }
+
+  /* buttons: a lit face, a crisp highlight row, a lip that sinks when pressed */
+  .btn { --face: var(--ember); --lip: #A8420F; --text: var(--ink);
+    position: relative; display: inline-flex; align-items: center; justify-content: center; min-height: 44px; padding: 6px 16px 9px;
+    font: 400 20px/1 var(--f-display); letter-spacing: 1px; text-transform: uppercase; color: var(--text);
+    background: linear-gradient(180deg, rgba(255, 255, 255, .28) 0 3px, var(--face) 3px calc(100% - 4px), var(--lip) calc(100% - 4px));
+    clip-path: var(--step); transition: transform 110ms var(--ease-out), filter 160ms ease; }
+  .btn:active { transform: translateY(2px); filter: brightness(.94); }
+  @media (hover: hover) and (pointer: fine) { .btn:hover { filter: brightness(1.07); } }
+  .btn.cream { --face: var(--cream-2); --lip: #B9876A; }
+  .btn.pink { --face: var(--pink); --lip: #9C1A55; }
+  .btn[aria-pressed="true"] { --face: var(--lime); --lip: #4E8A12; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  .row .btn { flex: 1 1 auto; }
+  .note { margin-top: 10px; color: var(--muted); }
+
+  /* the sounds */
+  .groups { display: grid; gap: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+  .snd { --acc: var(--cream-2); position: relative; display: grid; grid-template-rows: auto 1fr auto; gap: 6px; text-align: left;
+    padding: 12px 14px 12px; min-height: 132px; background: rgba(30, 9, 24, .62); clip-path: var(--step);
+    box-shadow: inset 0 calc(2 * var(--px)) 0 var(--acc); transition: transform 110ms var(--ease-out), background-color 160ms ease; }
+  .snd::after { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+    background: radial-gradient(90% 70% at 50% 0%, color-mix(in srgb, var(--acc) 45%, transparent), transparent 70%);
+    transition: opacity 420ms ease-out; }
+  .snd.hit::after { opacity: 1; transition-duration: 30ms; }
+  .snd:active { transform: translateY(2px); }
+  @media (hover: hover) and (pointer: fine) { .snd:hover { background-color: rgba(52, 17, 40, .72); } }
+  .snd-name { font: 400 30px/0.9 var(--f-display); letter-spacing: 1px; color: var(--cream); }
+  .snd-desc { font-size: 15px; color: var(--cream-2); }
+  .snd-meta { font: 16px/1 var(--f-label); color: var(--soft); min-height: 16px; }
+  .snd-meta.ok { color: var(--lime-hi); }
+  .snd-meta.bad { color: var(--pink-hi); }
+
+  /* the waveform and the measurements */
+  .wave { display: block; width: 100%; height: 120px; background: rgba(18, 6, 15, .75); }
+  .wave-cap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 16px; margin-top: 8px; font: 16px/1.2 var(--f-label); color: var(--muted); }
+  .results { width: 100%; border-collapse: collapse; margin-top: 12px; font: 16px/1.2 var(--f-label); }
+  .results th { text-align: left; font-weight: 400; color: var(--ember-hi); padding: 4px 8px 6px 0; border-bottom: 2px solid rgba(255, 210, 156, .3); }
+  .results td { padding: 5px 8px 5px 0; border-bottom: 1px solid rgba(255, 210, 156, .1); color: var(--cream-2); }
+  .results td.num, .results th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .results .pass { color: var(--lime-hi); }
+  .results .fail { color: var(--pink-hi); }
+  .summary { margin-top: 10px; }
+  .scroll { overflow-x: auto; }
+
+  @media (max-width: 1023px) {
+    .bench { grid-template-columns: minmax(0, 1fr); padding: 24px 16px 48px; gap: 16px; }
+    .head h1 { font-size: 40px; }
+  }
+  @media (max-width: 760px) {
+    .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .snd { min-height: 120px; padding: 10px 10px 10px; }
+    .snd-name { font-size: 20px; }
+    .head h1 { font-size: 40px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .snd, .btn, .snd::after { transition: none; } }
+</style>
+</head>
+<body>
+<main class="bench" id="bench">
+  <header class="head">
+    <h1>Sound <b>bench</b></h1>
+    <p class="lede copy">Every sound in Wickwager is synthesised in code by <span class="k-name">src/audio.js</span>: plucked strings, felt mallets, warm bells and the candle hum, with no samples and no files. Press any sound to hear it; <span class="k-chips">index</span> climbs the scoring ladder and <span class="k-mult">intensity</span> sizes the big moments.</p>
+    <p class="status" id="status" role="status"><i aria-hidden="true"></i><span id="status-text">Sound waits for a click</span></p>
+  </header>
+
+  <aside class="side" aria-label="Controls">
+    <section class="panel" aria-labelledby="h-mix">
+      <h2 id="h-mix">Mix</h2>
+      <div class="field"><label for="vol-sfx">Sound effects</label><output id="o-sfx" for="vol-sfx">60</output><input id="vol-sfx" type="range" min="0" max="100" value="60"></div>
+      <div class="field"><label for="vol-music">Music</label><output id="o-music" for="vol-music">40</output><input id="vol-music" type="range" min="0" max="100" value="40"></div>
+      <div class="row" style="margin-top:14px"><button class="btn cream" id="mute" type="button" aria-pressed="false">Mute all</button></div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-opts">
+      <h2 id="h-opts">Options sent with each sound</h2>
+      <div class="field"><label for="opt-index">Index (ladder step)</label><output id="o-index" for="opt-index">0</output><input id="opt-index" type="range" min="0" max="12" value="0"></div>
+      <label class="check"><input id="opt-climb" type="checkbox" checked> Climb one step after each scoring sound</label>
+      <div class="field"><label for="opt-intensity">Intensity</label><output id="o-intensity" for="opt-intensity">0.5</output><input id="opt-intensity" type="range" min="0" max="100" value="50"></div>
+      <div class="field"><label for="opt-pitch">Pitch (semitones)</label><output id="o-pitch" for="opt-pitch">0</output><input id="opt-pitch" type="range" min="-12" max="12" value="0"></div>
+      <div class="field"><label for="opt-pan">Pan</label><output id="o-pan" for="opt-pan">0</output><input id="opt-pan" type="range" min="-100" max="100" value="0" step="10"></div>
+    </section>
+
+    <section class="panel" aria-labelledby="h-music">
+      <h2 id="h-music">Music</h2>
+      <div class="row">
+        <button class="btn" type="button" data-music="table" aria-pressed="false">Table</button>
+        <button class="btn" type="button" data-music="shop" aria-pressed="false">Shop</button>
+        <button class="btn cream" type="button" data-music="off">Stop</button>
+      </div>
+      <p class="note copy" id="music-note">Off. The table loop is 72 bpm, the Shop loop 80 bpm; switching crossfades.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="h-runs">
+      <h2 id="h-runs">Run a check</h2>
+      <div class="row">
+        <button class="btn" type="button" id="payout">Play a payout</button>
+        <button class="btn pink" type="button" id="stack">Stack test</button>
+        <button class="btn cream" type="button" id="measure">Measure all</button>
+      </div>
+      <p class="note copy">The payout follows the Lit timeline: a deal, two picks, Play hand, the ticks climbing, the total, Blind beaten, the cash-out lines and <span class="k-money">Collect</span>.</p>
+    </section>
+  </aside>
+
+  <div class="main">
+    <section class="panel" aria-labelledby="h-wave">
+      <h2 id="h-wave">Last sound, rendered offline</h2>
+      <canvas class="wave" id="wave" width="1000" height="120" aria-label="Waveform of the last rendered sound"></canvas>
+      <div class="wave-cap"><span id="wave-name">Press a sound to see its waveform</span><span id="wave-stats"></span></div>
+    </section>
+    <div class="groups" id="groups" style="margin-top:16px"></div>
+    <section class="panel" aria-labelledby="h-results" id="results-panel" hidden style="margin-top:16px">
+      <h2 id="h-results">Every sound, measured</h2>
+      <p class="copy summary" id="summary"></p>
+      <div class="scroll"><table class="results" id="results"></table></div>
+    </section>
+  </div>
+</main>
+<div class="sr" id="live" aria-live="polite"></div>
+
+<script src="../src/audio.js"></script>
+<script>
+(() => {
+  'use strict';
+  const A = window.TW && TW.Audio;
+  const $ = (id) => document.getElementById(id);
+  const live = (msg) => { $('live').textContent = msg; };
+
+  // the sounds, grouped by where the game plays them: [name, description, accent]
+  const GROUPS = [
+    ['Scoring', [
+      ['chip', 'A wooden marimba tick for <span class="k-chips">+Chips</span>. Climbs with index.', 'var(--chip)'],
+      ['mult', 'A warm plucked string with its octave below for <span class="k-mult">+Mult</span>. Climbs with index.', 'var(--mult)'],
+      ['xmult', 'A three-string strum, a felt drum and a bell for <span class="k-mult">×Mult</span>.', 'var(--mult)'],
+      ['again', 'A quick rising double strike for a retrigger: Encore!', 'var(--pink)'],
+      ['money', 'Two abacus beads for a <span class="k-money">$</span> step or a cash-out line.', 'var(--money)'],
+      ['total', 'A fat strummed D major chord with a felt drum and a bell. Grows with intensity.', 'var(--ember)'],
+      ['beaten', 'A bright, rounded hand-bell cascade: Blind beaten.', 'var(--lime)'],
+    ]],
+    ['Cards', [
+      ['select', 'A soft kalimba note over a paper tick. Rises with each card chosen.', 'var(--cream-2)'],
+      ['deselect', 'The same tine a step lower, set down on felt.', 'var(--cream-2)'],
+      ['deal', 'A card snaps off the deck, slides over cloth and lands.', 'var(--cream-2)'],
+      ['play', 'The played cards sweep to the stage and land on the felt.', 'var(--ember)'],
+      ['discard', 'Cards swept away with a falling whoosh.', 'var(--pink)'],
+      ['shuffle', 'A riffle of card flicks, then the deck squared on the felt.', 'var(--cream-2)'],
+      ['flip', 'A quick paper flick with a tiny tick.', 'var(--cream-2)'],
+    ]],
+    ['Shop and packs', [
+      ['collect', 'A wooden box set down, a rising pluck and two beads: <span class="k-money">Collect $N</span>.', 'var(--money)'],
+      ['buy', 'A card laid on the felt and a rising fifth.', 'var(--vio)'],
+      ['sell', 'A falling fifth and two beads.', 'var(--vio)'],
+      ['reroll', 'A rattle of wooden beads and a rising tine pair.', 'var(--vio)'],
+      ['pack', 'Paper torn open, a warm swell and two tines.', 'var(--vio)'],
+      ['pick', 'A card flip and a plucked fifth with a small bell.', 'var(--vio)'],
+      ['use', 'A rising shimmer that settles on two bells.', 'var(--vio)'],
+      ['tag', 'Two small bells a fourth apart.', 'var(--vio)'],
+      ['skip', 'A short air sweep and two falling beads.', 'var(--vio)'],
+    ]],
+    ['The run', [
+      ['boss', 'A deep gong, a felt drum and a low tritone: the Boss Blind.', 'var(--pink)'],
+      ['win', 'A harp run up two octaves into a full chord: You win!', 'var(--lime)'],
+      ['lose', 'A candle blown out, then a falling minor line: Game Over.', 'var(--plum-4)'],
+    ]],
+    ['Interface', [
+      ['button', 'One small wooden bead.', 'var(--plum-4)'],
+      ['error', 'Two muted felt knocks, falling. No buzzer.', 'var(--plum-4)'],
+    ]],
+  ];
+  const LADDER = new Set(['chip', 'mult', 'xmult', 'again', 'money']);
+
+  // ------------------------------------------------------------ build the sound cards
+  const groups = $('groups');
+  for (const [title, list] of GROUPS) {
+    const sec = document.createElement('section');
+    sec.className = 'panel';
+    const id = 'g-' + title.toLowerCase().replace(/\W+/g, '-');
+    sec.setAttribute('aria-labelledby', id);
+    sec.innerHTML = `<h2 id="${id}">${title}</h2><div class="grid"></div>`;
+    const grid = sec.querySelector('.grid');
+    for (const [name, desc, acc] of list) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'snd';
+      b.dataset.sound = name;
+      b.style.setProperty('--acc', acc);
+      b.innerHTML = `<span class="snd-name">${name}</span><span class="snd-desc copy">${desc}</span><span class="snd-meta" aria-live="off"></span>`;
+      grid.append(b);
+    }
+    groups.append(sec);
+  }
+  const listed = GROUPS.flatMap(([, l]) => l.map(([n]) => n));
+  const missing = A ? A.NAMES.filter((n) => !listed.includes(n)) : [];
+  if (missing.length) console.warn('bench: sounds without a card', missing);
+
+  // ------------------------------------------------------------ controls
+  const val = (id) => Number($(id).value);
+  function opts(name) {
+    return { index: val('opt-index'), intensity: val('opt-intensity') / 100, pitch: val('opt-pitch'), pan: val('opt-pan') / 100 };
+  }
+  function syncOutputs() {
+    $('o-sfx').textContent = $('vol-sfx').value;
+    $('o-music').textContent = $('vol-music').value;
+    $('o-index').textContent = $('opt-index').value;
+    $('o-intensity').textContent = (val('opt-intensity') / 100).toFixed(2).replace(/0$/, '');
+    $('o-pitch').textContent = (val('opt-pitch') > 0 ? '+' : '') + $('opt-pitch').value;
+    $('o-pan').textContent = (val('opt-pan') / 100).toFixed(1);
+  }
+  function applyMix() {
+    if (!A) return;
+    A.setVolume('sfx', val('vol-sfx') / 100);
+    A.setVolume('music', val('vol-music') / 100);
+  }
+  document.addEventListener('input', (e) => { if (e.target.matches('input[type=range]')) { syncOutputs(); applyMix(); } });
+  syncOutputs();
+
+  function status() {
+    if (!A) { $('status-text').textContent = 'audio.js missing'; return; }
+    const s = A.state();
+    const on = s.running && !s.muted;
+    $('status').classList.toggle('on', on);
+    $('status-text').textContent = !s.supported ? 'No Web Audio here' : !s.ready ? 'Sound waits for a click' : s.muted ? 'Muted' : s.running ? 'Sound on' : 'Starting';
+    const m = s.music;
+    for (const b of document.querySelectorAll('[data-music]')) if (b.dataset.music !== 'off') b.setAttribute('aria-pressed', String(m.playing && m.variant === b.dataset.music));
+    $('music-note').textContent = m.playing
+      ? `${m.variant === 'shop' ? 'Shop' : 'Table'} loop, ${m.section || 'starting'} section, bar ${Math.max(1, m.bar + 1)}. Bank: ${s.bank} notes rendered in ${s.bankMs} ms.`
+      : 'Off. The table loop is 72 bpm, the Shop loop 80 bpm; switching crossfades.';
+  }
+  setInterval(status, 500);
+
+  // the first click anywhere starts the sound (audio.js also waits for one if init() comes early)
+  if (A) { applyMix(); A.init(); }
+  document.addEventListener('pointerdown', () => { if (A) { A.init(); applyMix(); status(); } }, true);
+  document.addEventListener('keydown', () => { if (A) { A.init(); applyMix(); } }, true);
+
+  $('mute').addEventListener('click', (e) => {
+    const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
+    e.currentTarget.setAttribute('aria-pressed', String(on));
+    e.currentTarget.textContent = on ? 'Unmute' : 'Mute all';
+    A.setMuted(on);
+    status();
+  });
+  for (const b of document.querySelectorAll('[data-music]')) {
+    b.addEventListener('click', () => { A.init(); A.music(b.dataset.music === 'off' ? false : b.dataset.music); status(); });
+  }
+
+  // ------------------------------------------------------------ playing and drawing a sound
+  const db = (x) => (x > -900 ? x.toFixed(1) : '−∞').replace('-', '−');
+  function momentary(buf) {
+    const sr = buf.sampleRate, W = Math.floor(sr * 0.1), H = Math.floor(sr * 0.025);
+    const L = buf.getChannelData(0), R = buf.numberOfChannels > 1 ? buf.getChannelData(1) : L;
+    let best = 0;
+    for (let s = 0; s + W <= L.length; s += H) {
+      let e = 0;
+      for (let i = s; i < s + W; i += 2) e += L[i] * L[i] + R[i] * R[i];
+      best = Math.max(best, e / W);
+    }
+    return best > 0 ? 10 * Math.log10(best) : -999;
+  }
+  function draw(buf, name, m) {
+    const cv = $('wave'), g = cv.getContext('2d');
+    const w = cv.width = Math.max(300, Math.round(cv.clientWidth * (window.devicePixelRatio || 1)));
+    const h = cv.height = Math.round(120 * (window.devicePixelRatio || 1));
+    g.clearRect(0, 0, w, h);
+    const ceil = 0.89;
+    g.fillStyle = 'rgba(255, 76, 155, .35)';
+    g.fillRect(0, Math.round(h / 2 - (h / 2) * ceil), w, 1);
+    g.fillRect(0, Math.round(h / 2 + (h / 2) * ceil), w, 1);
+    g.fillStyle = 'rgba(255, 243, 224, .14)';
+    g.fillRect(0, Math.round(h / 2), w, 1);
+    const L = buf.getChannelData(0), R = buf.numberOfChannels > 1 ? buf.getChannelData(1) : L;
+    const start = Math.max(0, Math.floor((m.start - 0.02) * buf.sampleRate)), end = Math.min(buf.length, Math.ceil((m.end + 0.05) * buf.sampleRate));
+    const per = Math.max(1, (end - start) / w);
+    g.fillStyle = '#FFD29C';
+    for (let x = 0; x < w; x++) {
+      let lo = 0, hi = 0;
+      const a = Math.floor(start + x * per), b = Math.min(end, Math.floor(start + (x + 1) * per));
+      for (let i = a; i < b; i++) { const v = 0.5 * (L[i] + R[i]); if (v < lo) lo = v; if (v > hi) hi = v; }
+      const y0 = h / 2 - hi * (h / 2), y1 = h / 2 - lo * (h / 2);
+      g.fillRect(x, y0, 1, Math.max(1, y1 - y0));
+    }
+    $('wave-name').textContent = name;
+    const nb = ' '; // keep each number with its unit
+    $('wave-stats').textContent = `peak ${db(m.peakDb)}${nb}dBFS · loudest 100${nb}ms ${db(m.mom)}${nb}dB · ${(m.end - m.start).toFixed(2)}${nb}s`;
+  }
+  async function measureOne(name, o) {
+    const buf = await A.render(name, o);
+    if (!buf) return null;
+    const m = A.measure(buf);
+    m.mom = momentary(buf);
+    return { buf, m };
+  }
+  let renderSeq = 0;
+  async function audition(btn) {
+    const name = btn.dataset.sound, o = opts(name);
+    A.init();
+    A.sfx(name, o);
+    btn.classList.add('hit');
+    setTimeout(() => btn.classList.remove('hit'), 140);
+    if (LADDER.has(name) && $('opt-climb').checked) { $('opt-index').value = String((val('opt-index') + 1) % 13); syncOutputs(); }
+    const seq = ++renderSeq;
+    const r = await measureOne(name, o);
+    if (!r || seq !== renderSeq) return;
+    draw(r.buf, `${name} · index ${o.index} · intensity ${o.intensity}`, r.m);
+    const meta = btn.querySelector('.snd-meta');
+    meta.textContent = `peak ${db(r.m.peakDb)} · ${(r.m.end - r.m.start).toFixed(2)} s`;
+    meta.className = 'snd-meta ' + (!r.m.silent && r.m.peak < 1 ? 'ok' : 'bad');
+  }
+  groups.addEventListener('click', (e) => { const b = e.target.closest('.snd'); if (b) audition(b); });
+
+  // ------------------------------------------------------------ checks
+  /** A payout on the audio clock, after the Lit timeline (ms at speed 1). */
+  function payout() {
+    A.init();
+    const at = [];
+    for (let i = 0; i < 8; i++) at.push(['deal', { index: i }, 70 * i]);
+    at.push(['select', { index: 0 }, 900], ['select', { index: 1 }, 1150], ['play', {}, 1500]);
+    let i = 0;
+    for (const t of [1960, 2310, 2700, 2850, 3000, 3150, 3300, 3450]) at.push(['chip', { index: i++ }, t]);
+    at.push(['mult', { index: i++ }, 3700], ['again', { index: i++ }, 3950], ['mult', { index: i++ }, 4150], ['xmult', { index: i++, intensity: 0.7 }, 4450]);
+    at.push(['total', { intensity: 0.75 }, 5100], ['beaten', { intensity: 0.75 }, 6500]);
+    at.push(['money', { index: 0 }, 7400], ['money', { index: 1 }, 7600], ['money', { index: 2 }, 7800], ['collect', { intensity: 0.6 }, 8500]);
+    for (const [n, o, d] of at) A.sfx(n, Object.assign({ delay: d }, o));
+    live('Playing a payout: about nine seconds.');
+    return at.length;
+  }
+  const STACK = [['total', { intensity: 1 }], ['beaten', { intensity: 1 }], ['win', { intensity: 1 }], ['boss', {}], ['xmult', { index: 7, intensity: 1 }],
+    ['xmult', { index: 6, intensity: 1 }], ['mult', { index: 7 }], ['chip', { index: 7 }], ['collect', { intensity: 1 }], ['lose', {}], ['use', {}], ['pack', {}]];
+  async function stack() {
+    A.init();
+    for (const [n, o] of STACK) A.sfx(n, o);
+    const buf = await A.renderStack(STACK.map(([n, o]) => [n, o, 0]));
+    const m = A.measure(buf);
+    m.mom = momentary(buf);
+    draw(buf, `stack test: ${STACK.length} big sounds at once`, m);
+    live(`Stack test: peak ${db(m.peakDb)} dBFS.`);
+    return m;
+  }
+  async function measureAll(o) {
+    const base = Object.assign({ index: val('opt-index'), intensity: val('opt-intensity') / 100, pitch: val('opt-pitch') }, o || {});
+    const rows = [];
+    for (const name of A.NAMES) {
+      const r = await measureOne(name, base);
+      rows.push({ name, peakDb: r.m.peakDb, mom: Math.round(r.m.mom * 100) / 100, seconds: Math.round((r.m.end - r.m.start) * 100) / 100, silent: r.m.silent, ok: !r.m.silent && r.m.peak < 1 });
+    }
+    const table = $('results');
+    table.innerHTML = '<thead><tr><th scope="col">Sound</th><th scope="col" class="num">Peak dBFS</th><th scope="col" class="num">Loudest 100 ms</th><th scope="col" class="num">Length s</th><th scope="col">Check</th></tr></thead>';
+    const tb = document.createElement('tbody');
+    for (const r of rows) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${r.name}</td><td class="num">${db(r.peakDb)}</td><td class="num">${db(r.mom)}</td><td class="num">${r.seconds.toFixed(2)}</td><td class="${r.ok ? 'pass' : 'fail'}">${r.ok ? 'sounds, below 0' : r.silent ? 'silent' : 'clips'}</td>`;
+      tb.append(tr);
+    }
+    table.append(tb);
+    const top = Math.max(...rows.map((r) => r.peakDb));
+    const good = rows.filter((r) => r.ok).length;
+    $('summary').innerHTML = `<span class="k-name">${good} of ${rows.length}</span> sounds render non-silent with every peak below 0 dBFS. Loudest peak <span class="k-name">${db(top)} dBFS</span>, rendered at full volume with index ${base.index} and intensity ${base.intensity}.`;
+    $('results-panel').hidden = false;
+    live(`${good} of ${rows.length} sounds pass. Loudest peak ${db(top)} dBFS.`);
+    return rows;
+  }
+  $('payout').addEventListener('click', payout);
+  $('stack').addEventListener('click', () => { stack(); });
+  $('measure').addEventListener('click', async (e) => {
+    const b = e.currentTarget;
+    b.disabled = true;
+    b.textContent = 'Measuring';
+    try { await measureAll(); } finally { b.disabled = false; b.textContent = 'Measure all'; }
+  });
+
+  // hooks for scripted checks (tools/cdp.mjs)
+  window.__bench = { names: () => (A ? A.NAMES.slice() : []), cards: () => listed.slice(), payout, stack, measureAll, measureOne, momentary, status };
+  status();
+})();
+</script>
+</body>
+</html>

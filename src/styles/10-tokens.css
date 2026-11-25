@@ -1,0 +1,154 @@
+/* Wickwager tokens: the Ember Lit palette, light, glow, type, motion and the card silhouette.
+   Ported from mockups/ember-lit/lit.css and NOTES.md (the visual source of truth, ARCH.md section 1).
+   Pixel sprites stay crisp on one grid per breakpoint: --px is 3 CSS px on a window at least 1024 px wide and 870 px
+   tall, and 2 below 1024 px wide or under 870 px tall; every sprite is shown at exactly --px with image-rendering:
+   pixelated. Light, glow, shadow and depth are separate layers around the sprites.
+   JS (src/ui/00-core.js) installs the 9-slice chrome frames as --f-* custom properties on :root and
+   rewrites the --t-* durations and spring curves when the game speed changes. */
+
+:root {
+  --px: 3px;
+
+  /* palette (mirrors the Lit art kit) */
+  --edge: #2B1220; --ink: #1E0D19; --ink-2: #2A1423;
+  --plum: #3C2132; --plum-2: #4D2B40; --plum-3: #6A3D55; --plum-4: #8C5671;
+  --cream: #FFF3E0; --cream-2: #F2D3AE; --cream-3: #DDB08A;
+  --line: #F0BE96; --muted: #EBC3AE; --soft: #D9A892;
+  --chip: #4A62FF; --chip-hi: #A9B8FF; --chip-lo: #2734B5;
+  --mult: #E9382B; --mult-hi: #FFB9A6; --mult-lo: #A51A27;
+  --money: #FFCE3B; --money-hi: #FFF0A0; --money-lo: #D18A1D;
+  --lime: #9EE03C; --lime-hi: #E2FFA6;
+  --pink: #FF4C9B; --pink-hi: #FFB2D6;
+  --ember: #FF7A2B; --ember-hi: #FFD29C;
+  --vio: #8B46EE; --vio-hi: #CDA8FF;
+  --acid: #CFFF2F;
+  /* ground bands, top to bottom */
+  --b0: #2C1535; --b1: #40173F; --b2: #5A1A41; --b3: #761F3C; --b4: #922B35; --b5: #AE402C; --b6: #C65A26;
+
+  /* light: warm sources and tinted shadows (never black) */
+  --light-candle: 255, 186, 110;
+  --light-hearth: 255, 122, 52;
+  --shadow: 26, 4, 18;
+
+  /* glows on live readouts: a tight core plus a halo in the readout's colour; cash keeps only its core */
+  --glow-chips: drop-shadow(0 0 2px rgba(150, 168, 255, .95)) drop-shadow(0 0 10px rgba(74, 98, 255, .75));
+  --glow-mult: drop-shadow(0 0 2px rgba(255, 160, 140, .95)) drop-shadow(0 0 10px rgba(233, 56, 43, .75));
+  --glow-score: drop-shadow(0 0 3px rgba(255, 214, 160, .75)) drop-shadow(0 0 16px rgba(255, 140, 60, .55));
+  --glow-cream: drop-shadow(0 0 2px rgba(255, 226, 190, .6)) drop-shadow(0 0 10px rgba(255, 160, 90, .35));
+  --glow-money: drop-shadow(0 0 2px rgba(255, 214, 100, .7));
+  --glow-ember: drop-shadow(0 0 2px rgba(255, 180, 110, .85)) drop-shadow(0 0 9px rgba(255, 122, 43, .6));
+  --glow-pink: drop-shadow(0 0 2px rgba(255, 170, 210, .85)) drop-shadow(0 0 9px rgba(255, 76, 155, .6));
+  --glow-vio: drop-shadow(0 0 2px rgba(205, 168, 255, .85)) drop-shadow(0 0 9px rgba(139, 70, 238, .6));
+
+  /* type: each pixel face at a whole multiple of its own grid; long copy in Bricolage Grotesque */
+  --f-display: 'Jersey 10', 'Tiny5', ui-monospace, monospace;
+  --f-label: 'Tiny5', 'Jersey 10', ui-monospace, monospace;
+  --f-copy: 'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --t-label: 16px;   /* Tiny5, 8-unit grid */
+  --t-tag: 20px;     /* Jersey 10, 10-unit grid */
+  --t-btn: 30px;
+  --t-title: 30px;
+  --t-copy: 16px;    /* Bricolage: never below 15 px */
+  --t-copy-s: 15px;
+
+  /* motion: every duration below is divided by the game speed (00-core.js rewrites them) */
+  --speed: 1;
+  --t-press: 110ms; --t-fast: 160ms; --t-base: 240ms; --t-lift: 460ms; --t-follow: 1400ms;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-io: cubic-bezier(0.77, 0, 0.175, 1);
+  /* until 00-core.js runs: it is the one source of the three damped springs (zeta 0.62 spring, 0.86 soft, 0.42 bouncy),
+     sampled into linear(), and writes them here; where linear() is missing it writes these same cubic-béziers
+     (EASE_FALLBACK there), so the CSS transitions and the Web Animations always share one curve */
+  --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --spring-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --spring-bouncy: cubic-bezier(0.34, 1.7, 0.64, 1);
+
+  /* card size in art px, and its silhouette with corners stepped 4-2-1-1 like the sprite */
+  --cw: 41; --ch: 55;
+  --card-w: calc(var(--cw) * var(--px));
+  --card-h: calc(var(--ch) * var(--px));
+  --card-clip: polygon(
+    calc(4 * var(--px)) 0, calc(37 * var(--px)) 0, calc(37 * var(--px)) var(--px), calc(39 * var(--px)) var(--px),
+    calc(39 * var(--px)) calc(2 * var(--px)), calc(40 * var(--px)) calc(2 * var(--px)), calc(40 * var(--px)) calc(4 * var(--px)),
+    100% calc(4 * var(--px)), 100% calc(100% - 4 * var(--px)), calc(40 * var(--px)) calc(100% - 4 * var(--px)),
+    calc(40 * var(--px)) calc(100% - 2 * var(--px)), calc(39 * var(--px)) calc(100% - 2 * var(--px)), calc(39 * var(--px)) calc(100% - var(--px)),
+    calc(37 * var(--px)) calc(100% - var(--px)), calc(37 * var(--px)) 100%, calc(4 * var(--px)) 100%, calc(4 * var(--px)) calc(100% - var(--px)),
+    calc(2 * var(--px)) calc(100% - var(--px)), calc(2 * var(--px)) calc(100% - 2 * var(--px)), var(--px) calc(100% - 2 * var(--px)),
+    var(--px) calc(100% - 4 * var(--px)), 0 calc(100% - 4 * var(--px)), 0 calc(4 * var(--px)), var(--px) calc(4 * var(--px)),
+    var(--px) calc(2 * var(--px)), calc(2 * var(--px)) calc(2 * var(--px)), calc(2 * var(--px)) var(--px), calc(4 * var(--px)) var(--px));
+
+  /* stacking: room 0, table 1, its effects 9-12, light 26, sparks 27, dialogs 25, toasts 35, tooltip 45 */
+  --z-table: 1; --z-dialog: 25; --z-fxl: 26; --z-fx: 27; --z-toast: 35; --z-tip: 45;
+
+  color-scheme: dark;
+}
+/* the art pixel is 2 CSS px in the compact layout (below 1024 px wide: phones, tablets, landscape phones) and on a
+   window under 870 px tall, where 3 would push the hand and its buttons below the fold (a laptop's browser); the
+   type on buttons and titles follows it to Jersey 10's own 2x grid. 00-core.js MQ.px2 is the same query. */
+@media (max-width: 1023px), (max-height: 869px) {
+  :root { --px: 2px; --t-btn: 20px; --t-title: 20px; }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+html { background: var(--b2); overflow-x: clip; scrollbar-color: var(--plum-4) transparent; }
+body {
+  font-family: var(--f-label); font-size: var(--t-label); line-height: 1.35; color: var(--cream);
+  background: var(--b2); min-height: 100dvh; overflow-x: clip;
+  -webkit-font-smoothing: none; font-smooth: never;
+  -webkit-tap-highlight-color: transparent;
+  text-rendering: optimizeSpeed;
+}
+::selection { background: var(--ember); color: var(--ink); }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; }
+button:disabled { cursor: default; }
+input, select, textarea { font: inherit; color: inherit; caret-color: var(--ember); accent-color: var(--ember); }
+h1, h2, h3, h4, p, ul, ol { margin: 0; }
+img { max-width: none; }
+:focus { outline: none; }
+/* the focus ring is two-tone: the pale yellow ring outside, a band of the art's dark plum edge inside it, so one of the
+   two clears 3:1 against anything (cream card stock, the lit hearth floor, a plum panel; WCAG 1.4.11, 2.4.7). The band
+   fills the gap between the element and its ring; an element that wants its ring further out sets --ring-gap. */
+:focus-visible { outline: 2px solid var(--money-hi); outline-offset: var(--ring-gap, 3px); border-radius: calc(2 * var(--px)); box-shadow: 0 0 0 var(--ring-gap, 3px) var(--edge); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: var(--plum-4); border-radius: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+
+.sr { position: absolute; top: 0; left: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.noscript { position: relative; z-index: 2; max-width: 32rem; margin: 20vh auto; padding: 24px; font: 400 18px/1.5 var(--f-copy); color: var(--cream); text-align: center; }
+
+/* a sprite at the page's art-pixel scale: --w and --h are its size in art px */
+.spr { display: block; width: calc(var(--w) * var(--px)); height: calc(var(--h) * var(--px)); image-rendering: pixelated; user-select: none; -webkit-user-drag: none; pointer-events: none; }
+.num-img { display: inline-block; vertical-align: middle; }
+.n { display: inline-flex; align-items: center; line-height: 0; }
+.g-chips { filter: var(--glow-chips); } .g-mult { filter: var(--glow-mult); } .g-score { filter: var(--glow-score); }
+.g-cream { filter: var(--glow-cream); } .g-money { filter: var(--glow-money); } .g-ember { filter: var(--glow-ember); }
+.g-pink { filter: var(--glow-pink); } .g-vio { filter: var(--glow-vio); }
+
+/* long copy: Bricolage Grotesque, smoothed, at least 15 px, with coloured keywords */
+.copy { font-family: var(--f-copy); font-size: var(--t-copy); font-weight: 500; line-height: 1.42; letter-spacing: 0; font-stretch: 92%;
+  -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; color: var(--cream); text-wrap: pretty; }
+.copy b, .copy strong { font-weight: 700; }
+.k-chips { color: var(--chip-hi); font-weight: 700; }
+.k-mult { color: var(--mult-hi); font-weight: 700; }
+.k-xmult { color: #FF8F78; font-weight: 800; }
+.k-money { color: var(--money); font-weight: 700; }
+.k-name { color: var(--ember-hi); font-weight: 700; }
+.k-warn { color: var(--pink-hi); }
+.k-dim { color: var(--muted); }
+
+/* motion modes: reduced motion keeps fades only, test mode has no motion at all */
+.reduce-motion .layer, .reduce-motion .layer .drift, .reduce-motion .light, .reduce-motion .mote, .reduce-motion .mote i,
+.reduce-motion .sway, .reduce-motion .candle .flame, .reduce-motion .candle .bloom, .reduce-motion .emblem .bloom,
+.reduce-motion [class*="ed-"] .ed-fx, .reduce-motion [class*="ed-"] .ed-fx *,
+.reduce-motion [class*="ed-"] .ed-fx::before, .reduce-motion [class*="ed-"] .ed-fx::after,
+.reduce-motion .ed-inverted .face { animation: none !important; }
+.reduce-motion .layer, .reduce-motion .lift, .reduce-motion .card::before, .reduce-motion .card::after,
+.reduce-motion .jk::before, .reduce-motion .jk::after, .reduce-motion .btn, .reduce-motion .sheen b,
+.reduce-motion .sw-knob, .reduce-motion .stk { transition: none !important; }
+.reduce-motion .mote { display: none; }
+.test-mode *, .test-mode *::before, .test-mode *::after { animation: none !important; transition: none !important; }
+.test-mode .mote { display: none; }
+/* stills: ambient loops hold still while a scripted check freezes a frame */
+.frame-mode .scene *, .frame-mode .sway, .frame-mode .candle *, .frame-mode .ed-fx, .frame-mode .ed-fx *,
+.frame-mode .ed-fx::before, .frame-mode .ed-fx::after, .frame-mode .ed-inverted .face { animation-play-state: paused !important; }
